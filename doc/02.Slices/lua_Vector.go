@@ -10,6 +10,7 @@ func (goType Vector) RegisterLuaType(L *lua.LState) {
 	staticMethodsTable := L.NewTypeMetatable("vector")
 	L.SetGlobal("vector", staticMethodsTable)
 	L.SetField(staticMethodsTable, "new_from", L.NewFunction(luaConstructorVectorNewVectorFrom))
+	L.SetField(staticMethodsTable, "new_variadic", L.NewFunction(luaConstructorVectorNewVectorVariadic))
 
 	fieldsTable := L.NewTypeMetatable(goType.LuaMetatableType())
 	L.SetGlobal(goType.LuaMetatableType(), fieldsTable)
@@ -39,6 +40,34 @@ func luaConstructorVectorNewVectorFrom(L *lua.LState) int {
 	}
 
 	r0 := NewVectorFrom(p0)
+
+	L.Push(gobindlua.NewUserData(&r0, L))
+
+	return 1
+}
+
+func luaConstructorVectorNewVectorVariadic(L *lua.LState) int {
+
+	var p0 []float64
+
+	{
+		ud, err := gobindlua.MapVariadicArgsToGoSlice[float64](1, L, func(val0 lua.LValue) float64 {
+			v0, ok := val0.(lua.LNumber)
+			if !ok {
+				L.ArgError(1, "argument not a float64 instance")
+			}
+
+			return float64(v0)
+		})
+
+		if err != nil {
+			L.ArgError(1, err.Error())
+		}
+
+		p0 = ud
+	}
+
+	r0 := NewVectorVariadic(p0...)
 
 	L.Push(gobindlua.NewUserData(&r0, L))
 

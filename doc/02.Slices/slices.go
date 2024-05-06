@@ -19,6 +19,10 @@ func NewVectorFrom(elems []float64) Vector {
 	return Vector{Elements: elems}
 }
 
+func NewVectorVariadic(elems ...float64) Vector {
+	return Vector{Elements: elems}
+}
+
 func NewMatrixFrom(elems [][]float64) Matrix {
 	return Matrix{Elements: elems}
 }

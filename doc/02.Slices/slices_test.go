@@ -12,7 +12,7 @@ import (
 const script = `
 --[[ Notice you can use lua tables as parameters for slices. ]]
 local a = vector.new_from({1,2,3})
-local b = vector.new_from({4,5,6})
+local b = vector.new_variadic(4,5,6)
 print("Inner product: " .. tostring(a:inner_product(b)))
 m.elements = a:outer_product(b).elements
 print("Outer product:")
