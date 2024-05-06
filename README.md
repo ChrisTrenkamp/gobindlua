@@ -7,11 +7,26 @@
 ```
 //go:generate gobindlua -s SomeStruct
 type SomeStruct struct {
-    // ...
+    SomeStrings []string
+}
+
+func NewSomeStruct(strs []string) SomeStruct {
+    return SomeStruct {
+        SomeStrings: strs,
+    }
+}
+
+Func (s SomeStruct) Join() string {
+    return strings.Join(s.SomeStrings, ", ")
 }
 ```
 
-... this will generate a file called `lua_SomeStruct.go`.
+... this will generate a file called `lua_SomeStruct.go`.  In your generated lua, the bindings will seamlessly work with Lua tables:
+
+```
+local my_struct = some_struct:new({"foo", "bar", "eggs", "ham"})
+print(my_struct:join()) --[[ foo, bar, eggs, ham ]]
+```
 
 ## Installation
 
