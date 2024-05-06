@@ -4,7 +4,7 @@
 
 `gobindlua` is designed to be used with `go:generate`.  For example:
 
-```
+```go
 //go:generate gobindlua -s SomeStruct
 type SomeStruct struct {
     SomeStrings []string
@@ -23,7 +23,7 @@ Func (s SomeStruct) Join() string {
 
 ... this will generate a file called `lua_SomeStruct.go`.  In your generated lua, the bindings will seamlessly work with Lua tables:
 
-```
+```lua
 local my_struct = some_struct:new({"foo", "bar", "eggs", "ham"})
 print(my_struct:join()) --[[ foo, bar, eggs, ham ]]
 ```
