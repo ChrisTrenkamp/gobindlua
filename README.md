@@ -21,10 +21,10 @@ Func (s SomeStruct) Join() string {
 }
 ```
 
-... this will generate a file called `lua_SomeStruct.go`.  In your generated lua, the bindings will seamlessly work with Lua tables:
+... this will generate a file called `lua_SomeStruct.go`.  The generated bindings will work seamlessly with Lua tables:
 
 ```lua
-local my_struct = some_struct:new({"foo", "bar", "eggs", "ham"})
+local my_struct = some_struct.new({"foo", "bar", "eggs", "ham"})
 print(my_struct:join()) --[[ foo, bar, eggs, ham ]]
 ```
 
