@@ -19,7 +19,6 @@ func RegisterLuaArray(L *lua.LState) {
 	mt.RawSetString("__index", L.NewFunction(arrayIndex))
 	mt.RawSetString("__newindex", L.NewFunction(arrayNewIndex))
 	mt.RawSetString("__len", L.NewFunction(arrayLen))
-	mt.RawSetString("__eq", L.NewFunction(arrayEq))
 }
 
 type LuaArray struct {
@@ -71,44 +70,8 @@ func arrayNewIndex(L *lua.LState) int {
 }
 
 func arrayLen(L *lua.LState) int {
-	slice := checkArray(1, L)
-
-	L.Push(lua.LNumber(slice.Len()))
+	L.Push(lua.LNumber(checkArray(1, L).Len()))
 	return 1
-}
-
-func arrayEq(L *lua.LState) int {
-	l := checkArray(1, L)
-	rAny := L.CheckAny(2)
-
-	switch t := rAny.(type) {
-	case *lua.LUserData:
-		L.Push(lua.LBool(arrayEqUserData(L, l, t)))
-	default:
-		L.ArgError(2, "LuaArray expected")
-	}
-
-	return 1
-}
-
-func arrayEqUserData(L *lua.LState, l *LuaArray, rUserData *lua.LUserData) bool {
-	r, ok := rUserData.Value.(*LuaArray)
-
-	if !ok {
-		L.ArgError(2, "user data must be a LuaArray")
-	}
-
-	if l.Len() != r.Len() {
-		return false
-	}
-
-	for i := 0; i < l.Len(); i++ {
-		if l.Index(i) != r.Index(i) {
-			return false
-		}
-	}
-
-	return true
 }
 
 func MapLuaArrayOrTableToGoSlice[T any](p lua.LValue, mapper func(val lua.LValue) T) ([]T, error) {

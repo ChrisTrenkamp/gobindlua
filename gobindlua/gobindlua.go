@@ -147,8 +147,13 @@ func (g *Generator) GenerateSourceCode(out io.Writer, pathToOutput string) error
 	}
 
 	formattedCode, err := imports.Process(pathToOutput, originalCodeBytes, nil)
+	if err != nil {
+		_, werr := io.Copy(out, bytes.NewBuffer(originalCodeBytes))
+		return errors.Join(err, werr)
+	}
+
 	_, werr := io.Copy(out, bytes.NewBuffer(formattedCode))
-	return errors.Join(err, werr)
+	return werr
 }
 
 func (g *Generator) addPackageFromFunctions(f []functiontype.FunctionType) {
@@ -306,7 +311,7 @@ func {{ .SourceUserDataSet }}(L *lua.LState) int {
 		{{- range $idx, $field := .GatherFields false }}
 	case "{{ $field.LuaName }}":
 		{{ $field.DataType.ConvertLuaTypeToGo "ud" (printf "%s(3)" $field.DataType.LuaParamType) 3 }}
-		p1.{{ $field.FieldName }} = {{ $field.DataType.ReferenceOrDereferenceForAssignment }}ud
+		p1.{{ $field.FieldName }} = {{ $field.DataType.ReferenceOrDereferenceForAssignmentToField }}ud
 		{{ end -}}
 	}
 
@@ -340,7 +345,7 @@ func {{ .FunctionType.SourceFnName }}(L *lua.LState) int {
 	{{ range $idx, $param := .Params }}
 		{
 			{{ $param.ConvertLuaTypeToGo "ud" (printf "%s(%d)" $param.LuaParamType $param.ParamNum) $param.ParamNum }}
-			p{{ $idx }} = {{ $param.ReferenceOrDereferenceForAssignment }}ud
+			p{{ $idx }} = {{ $param.ReferenceOrDereferenceForAssignmentToField }}ud
 		}
 	{{ end }}
 	{{ .FunctionType.GenerateReturnValues "r" }} := {{ if .FunctionType.Receiver -}}r.{{ end }}{{ .FunctionType.ActualFnName  }}({{ .FunctionType.GenerateParamValues "p" }})
