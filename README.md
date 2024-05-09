@@ -64,7 +64,6 @@ go build -o $GOPATH/bin/gobindlua gobindlua/gobindlua.go && go generate ./... &&
 
 ## TODO
 
-* Add support for maps.
 * Gather user types that are used in the struct, add them as dependencies, and auto-register them in the `RegisterLuaType` method.
 * gobindlua should be able to forgo generating a struct, and only generate bindings for functions.
 * gobindlua should be able to exclude fields and methods.
