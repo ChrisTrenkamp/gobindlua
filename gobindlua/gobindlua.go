@@ -279,7 +279,9 @@ func {{ .UserDataCheckFn }}(param int, L *lua.LState) *{{ .StructToGenerate }} {
 func (g *Generator) generateStructAccessFunction() {
 	templ := `
 func {{ .SourceUserDataAccess }}(L *lua.LState) int {
+	{{- if gt (len (.GatherFields false)) 0 }}
 	p1 := {{ .UserDataCheckFn }}(1, L)
+	{{- end }}
 	p2 := L.CheckString(2)
 
 	switch p2 {
@@ -304,7 +306,9 @@ func {{ .SourceUserDataAccess }}(L *lua.LState) int {
 func (g *Generator) generateStructSetFunction() {
 	templ := `
 func {{ .SourceUserDataSet }}(L *lua.LState) int {
+	{{- if gt (len (.GatherFields false)) 0 }}
 	p1 := {{ .UserDataCheckFn }}(1, L)
+	{{- end }}
 	p2 := L.CheckString(2)
 
 	switch p2 {

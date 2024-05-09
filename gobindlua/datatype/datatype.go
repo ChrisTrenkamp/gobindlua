@@ -51,6 +51,8 @@ func convertGoTypeToLua(variable string, variableType *DataType, level int) stri
 		return convertGoTypeToLuaSlice(t, variableType, variable, level)
 	case *types.Map:
 		return convertGoTypeToLuaMap(t, variableType, variable, level)
+	case *types.Interface:
+		return fmt.Sprintf("gobindlua.NewUserData(%s, L)", variable)
 	}
 
 	return fmt.Sprintf("gobindlua.NewUserData(%s%s, L)", variableType.referenceOrDereferenceUserDataForAssignment(), variable)
@@ -231,6 +233,8 @@ func (d *DataType) convertLuaTypeToGo(variableToCreate string, luaVariable strin
 		return d.convertLuaTypeToGoMap(t, variableToCreate, luaVariable, paramNum, level)
 	case *types.Struct:
 		return d.convertLuaTypeToStruct(variableToCreate, luaVariable, paramNum, level)
+	case *types.Interface:
+		return d.convertLuaTypeToInterface(variableToCreate, luaVariable, paramNum, level)
 	}
 
 	return "CANNOT_CONVERT_LUA_TYPE_TO_GO"
@@ -422,6 +426,48 @@ if !ok {
 	return execTempl(templ, args)
 }
 
+func (d *DataType) convertLuaTypeToInterface(variableToCreate string, luaVariable string, paramNum, level int) string {
+	args := struct {
+		VariableToCreate string
+		LuaVariable      string
+		DeclaredGoType   string
+		ParamNum         int
+	}{
+		VariableToCreate: variableToCreate,
+		LuaVariable:      luaVariable,
+		DeclaredGoType:   d.declaredGoType(),
+		ParamNum:         paramNum,
+	}
+
+	if level == 0 {
+		templ := `
+{{ .VariableToCreate }}, ok := {{ .LuaVariable }}.Value.({{ .DeclaredGoType }})
+
+if !ok {
+	L.ArgError(3, "{{ .DeclaredGoType }} expected")
+}
+`
+
+		return execTempl(templ, args)
+	}
+
+	templ := `
+{{ .VariableToCreate }}_ud, ok := {{ .LuaVariable }}.(*lua.LUserData)
+
+if !ok {
+	L.ArgError({{ .ParamNum }}, "UserData expected")
+}
+
+{{ .VariableToCreate }}, ok := {{ .VariableToCreate }}_ud.Value.({{ .DeclaredGoType }})
+
+if !ok {
+	L.ArgError(3, "{{ .DeclaredGoType }} expected")
+}
+`
+
+	return execTempl(templ, args)
+}
+
 func (d *DataType) ConvertLuaTypeToGoSliceEllipses(t *types.Slice, variableToCreate string, luaVariable string, paramNum int) string {
 	level := 0
 	elem := CreateDataTypeFrom(t.Elem(), d.packageSource)
@@ -546,7 +592,7 @@ func (d *DataType) luaType() string {
 		return "*gobindlua.LuaArray"
 	case *types.Map:
 		return "*gobindlua.LuaMap"
-	case *types.Struct:
+	case *types.Struct, *types.Interface:
 		return "lua.LUserData"
 	}
 
@@ -568,7 +614,7 @@ func (d *DataType) LuaParamType() string {
 		return "L.CheckAny"
 	case *types.Map:
 		return "L.CheckAny"
-	case *types.Struct:
+	case *types.Struct, *types.Interface:
 		return "L.CheckUserData"
 	}
 

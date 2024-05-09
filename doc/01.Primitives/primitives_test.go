@@ -10,6 +10,7 @@ import (
 )
 
 const script = `
+--[[ You can call the constructor functions and methods and access the fields from Lua. ]]
 data = primitive_struct.new()
 data.my_bool = true
 data.my_int = 42
@@ -53,7 +54,7 @@ func ExamplePrimitiveStruct() {
 	// MyFloat: 3.14
 	// MyString: all your lua are belong to us
 	// DivideMyInt: 21
-	// DivideMyInt error: <string>:16: divide by zero error
+	// DivideMyInt error: <string>:17: divide by zero error
 	// {
 	// 	"MyBool": true,
 	// 	"MyInt": 42,
