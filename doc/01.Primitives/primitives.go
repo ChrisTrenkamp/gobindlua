@@ -14,7 +14,7 @@ type PrimitiveStruct struct {
 	MyBool  bool
 	MyInt   int32
 	MyInt64 int64
-	// Notice how the `lua_PrimitiveStruct.go` will properly cast the float64 to this named type
+	// Notice how `lua_PrimitiveStruct.go` will properly cast the float64 to this named type
 	MyFloat  primitivesubpackage.SomeFloat64
 	MyString string
 }
