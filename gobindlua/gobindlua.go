@@ -340,7 +340,7 @@ func {{ .FunctionType.SourceFnName }}(L *lua.LState) int {
 		r := {{ .Generator.UserDataCheckFn }}(1, L)
 	{{- end }}
 	{{ range $idx, $param := .Params }}
-		var p{{ $idx }} {{ $param.ActualGoType }}
+		var p{{ $idx }} {{ $param.TemplateArg }}
 	{{ end }}
 	{{ range $idx, $param := .Params }}
 		{

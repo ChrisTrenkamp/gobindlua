@@ -46,19 +46,19 @@ func luaAccessPrimitiveStruct(L *lua.LState) int {
 
 	switch p2 {
 	case "my_bool":
-		L.Push(lua.LBool(p1.MyBool))
+		L.Push((lua.LBool)(p1.MyBool))
 
 	case "my_int":
-		L.Push(lua.LNumber(p1.MyInt))
+		L.Push((lua.LNumber)(p1.MyInt))
 
 	case "my_int64":
-		L.Push(lua.LNumber(p1.MyInt64))
+		L.Push((lua.LNumber)(p1.MyInt64))
 
 	case "my_float":
-		L.Push(lua.LNumber(p1.MyFloat))
+		L.Push((lua.LNumber)(p1.MyFloat))
 
 	case "my_string":
-		L.Push(lua.LString(p1.MyString))
+		L.Push((lua.LString)(p1.MyString))
 
 	case "divide_my_int":
 		L.Push(L.NewFunction(luaMethodPrimitiveStructDivideMyInt))
@@ -112,7 +112,7 @@ func luaMethodPrimitiveStructDivideMyInt(L *lua.LState) int {
 		L.Error(lua.LString(r1.Error()), 1)
 	}
 
-	L.Push(lua.LNumber(r0))
+	L.Push((lua.LNumber)(r0))
 
 	return 1
 }

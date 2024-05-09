@@ -23,13 +23,16 @@ func luaConstructorVectorNewVectorFrom(L *lua.LState) int {
 	var p0 []float64
 
 	{
+
 		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](L.CheckAny(1), func(val0 lua.LValue) float64 {
+
 			v0, ok := val0.(lua.LNumber)
+
 			if !ok {
 				L.ArgError(1, "argument not a float64 instance")
 			}
 
-			return float64(v0)
+			return (float64)(v0)
 		})
 
 		if err != nil {
@@ -51,13 +54,16 @@ func luaConstructorVectorNewVectorVariadic(L *lua.LState) int {
 	var p0 []float64
 
 	{
+
 		ud, err := gobindlua.MapVariadicArgsToGoSlice[float64](1, L, func(val0 lua.LValue) float64 {
+
 			v0, ok := val0.(lua.LNumber)
+
 			if !ok {
 				L.ArgError(1, "argument not a float64 instance")
 			}
 
-			return float64(v0)
+			return (float64)(v0)
 		})
 
 		if err != nil {
@@ -96,14 +102,16 @@ func luaAccessVector(L *lua.LState) int {
 		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
 			Slice: p1.Elements,
 			Len:   func() int { return len(p1.Elements) },
-			Index: func(idx0 int) lua.LValue { return lua.LNumber(p1.Elements[idx0]) },
+			Index: func(idx0 int) lua.LValue { return (lua.LNumber)((p1.Elements)[idx0]) },
 			SetIndex: func(idx0 int, val0 lua.LValue) {
+
 				t0, ok := val0.(lua.LNumber)
+
 				if !ok {
 					L.ArgError(3, "argument not a float64 instance")
 				}
 
-				p1.Elements[idx0] = float64(t0)
+				(p1.Elements)[idx0] = (float64)(t0)
 			},
 		}, L))
 
@@ -123,13 +131,16 @@ func luaSetVector(L *lua.LState) int {
 
 	switch p2 {
 	case "elements":
+
 		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](L.CheckAny(3), func(val0 lua.LValue) float64 {
+
 			v0, ok := val0.(lua.LNumber)
+
 			if !ok {
 				L.ArgError(3, "argument not a float64 instance")
 			}
 
-			return float64(v0)
+			return (float64)(v0)
 		})
 
 		if err != nil {
@@ -148,6 +159,7 @@ func luaMethodVectorInnerProduct(L *lua.LState) int {
 	var p0 Vector
 
 	{
+
 		ud, ok := L.CheckUserData(2).Value.(*Vector)
 
 		if !ok {
@@ -163,7 +175,7 @@ func luaMethodVectorInnerProduct(L *lua.LState) int {
 		L.Error(lua.LString(r1.Error()), 1)
 	}
 
-	L.Push(lua.LNumber(r0))
+	L.Push((lua.LNumber)(r0))
 
 	return 1
 }
@@ -174,6 +186,7 @@ func luaMethodVectorOuterProduct(L *lua.LState) int {
 	var p0 Vector
 
 	{
+
 		ud, ok := L.CheckUserData(2).Value.(*Vector)
 
 		if !ok {

@@ -66,13 +66,13 @@ func luaAccessUser(L *lua.LState) int {
 
 	switch p2 {
 	case "name":
-		L.Push(lua.LString(p1.Name))
+		L.Push((lua.LString)(p1.Name))
 
 	case "age":
-		L.Push(lua.LNumber(p1.Age))
+		L.Push((lua.LNumber)(p1.Age))
 
 	case "email":
-		L.Push(lua.LString(p1.Email))
+		L.Push((lua.LString)(p1.Email))
 	}
 
 	return 1
