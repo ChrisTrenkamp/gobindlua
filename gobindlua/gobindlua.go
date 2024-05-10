@@ -425,7 +425,7 @@ func (g *Generator) gatherReceivers() []functiontype.FunctionType {
 				for _, recType := range fn.Recv.List {
 					recType := datatype.CreateDataTypeFromExpr(recType.Type, g.packageSource)
 
-					if recType.Type.Underlying() == underylingStructType && unicode.IsUpper(rune(fnName[0])) {
+					if recType.Type.Underlying() == underylingStructType && unicode.IsUpper(rune(fnName[0])) && fnName != "RegisterLuaType" && fnName != "LuaMetatableType" {
 						luaName := gobindluautil.SnakeCase(fnName)
 						sourceCodeName := "luaMethod" + g.StructToGenerate() + fnName
 						ret = append(ret, functiontype.CreateFunction(fn, true, luaName, sourceCodeName, g.packageSource))
