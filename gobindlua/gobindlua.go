@@ -535,7 +535,7 @@ func (g *Generator) checkInclude(str string) bool {
 	}
 
 	if len(g.excludeFunctions) > 0 {
-		return slices.Contains(g.excludeFunctions, str)
+		return !slices.Contains(g.excludeFunctions, str)
 	}
 
 	return true
@@ -549,22 +549,31 @@ func (g *Generator) gatherConstructors() []functiontype.FunctionType {
 	for _, syn := range g.packageSource.Syntax {
 		for _, dec := range syn.Decls {
 			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Type.Results != nil {
-				fnName := fn.Name.Name
-
-				if g.hasFilters() {
-					if !g.checkInclude(fnName) {
-						continue
-					}
-				} else if !strings.HasPrefix(fnName, constructorPrefix) {
-					continue
-				}
-
 				for _, retType := range fn.Type.Results.List {
 					retType := datatype.CreateDataTypeFromExpr(retType.Type, g.packageSource)
 
 					if retType.Type.Underlying() == underylingStructType {
-						luaName := "New" + fnName[len(constructorPrefix):]
-						luaName = gobindluautil.SnakeCase(luaName)
+						fnName := fn.Name.Name
+
+						if strings.HasPrefix(fnName, "luaCheck") {
+							continue
+						}
+
+						if g.hasFilters() {
+							if !g.checkInclude(fnName) {
+								continue
+							}
+						} else if !strings.HasPrefix(fnName, constructorPrefix) {
+							continue
+						}
+
+						luaName := gobindluautil.SnakeCase(fnName)
+
+						if strings.HasPrefix(fnName, constructorPrefix) {
+							luaName = "New" + strings.TrimPrefix(fnName, constructorPrefix)
+							luaName = gobindluautil.SnakeCase(luaName)
+						}
+
 						sourceCodeName := "luaConstructor" + g.StructToGenerate() + fnName
 						ret = append(ret, functiontype.CreateFunction(fn, false, luaName, sourceCodeName, g.packageSource))
 						break
@@ -616,11 +625,15 @@ func (g *Generator) gatherReceivers() []functiontype.FunctionType {
 			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Recv != nil {
 				fnName := fn.Name.Name
 
+				if fnName == "RegisterLuaType" || fnName == "LuaMetatableType" {
+					continue
+				}
+
 				if g.hasFilters() {
 					if !g.checkInclude(fnName) {
 						continue
 					}
-				} else if !unicode.IsUpper(rune(fnName[0])) || fnName == "RegisterLuaType" || fnName == "LuaMetatableType" {
+				} else if !unicode.IsUpper(rune(fnName[0])) {
 					continue
 				}
 

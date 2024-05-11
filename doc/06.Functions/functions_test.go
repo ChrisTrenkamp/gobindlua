@@ -9,6 +9,8 @@ import (
 
 const script = `
 functions.print_me(functions.split("foo_bar", "_"), functions.split("eggs&ham", "&"))
+
+print("NotIncluded was excluded from the bindings: " .. tostring(functions.not_included == nil))
 `
 
 func Example() {
@@ -23,4 +25,5 @@ func Example() {
 
 	// Output:
 	//[foo bar] [eggs ham]
+	//NotIncluded was excluded from the bindings: true
 }
