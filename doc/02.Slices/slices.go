@@ -5,12 +5,12 @@ import (
 	"strings"
 )
 
-//go:generate gobindlua -s Vector
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua -s Vector
 type Vector struct {
 	Elements []float64
 }
 
-//go:generate gobindlua -s Matrix
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua -s Matrix
 type Matrix struct {
 	Elements [][]float64
 }

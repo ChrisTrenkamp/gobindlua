@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -11,10 +10,13 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 	"unicode"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
 
@@ -24,11 +26,27 @@ import (
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/structfield"
 )
 
+type flagArray []string
+
+func (i *flagArray) String() string {
+	return ""
+}
+
+func (i *flagArray) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 func main() {
+	includeFunctions := make(flagArray, 0)
+	excludeFunctions := make(flagArray, 0)
 	workingDir := flag.String("d", "", "The Go source directory to generate the bindings from. Uses the current working directory if empty")
-	structName := flag.String("s", "", "Generate the GopherLua bindings for the given struct.")
+	structToGenerate := flag.String("s", "", "Generate the GopherLua bindings for the given struct.")
+	packageToGenerate := flag.String("p", "", "Generate the GopherLua bindings from the functions in the -d parameter.")
+	flag.Var(&includeFunctions, "i", "Only include the given function or method names.")
+	flag.Var(&excludeFunctions, "x", "Exclude the given function or method names.")
 	metatableName := flag.String("t", "", "Generate a LuaMetatableType method that returns the given value.  Takes the snake_case form of -s if unspecified.")
-	outFile := flag.String("o", "", "The output file.  Defaults to lua_structname.go if empty.  Use '-' for stdout.")
+	outFile := flag.String("o", "", "The output file.  Defaults to lua_structname.go if empty.")
 
 	flag.Parse()
 
@@ -36,12 +54,20 @@ func main() {
 		log.Fatal("gobindlua does not accept arguments")
 	}
 
-	if *structName == "" {
-		log.Fatal("-s parameter is required")
+	if *structToGenerate == "" && *packageToGenerate == "" {
+		log.Fatal("-s or -p must be specified")
 	}
 
-	if *metatableName == "" {
-		*metatableName = gobindluautil.SnakeCase(*structName)
+	if *structToGenerate != "" && *packageToGenerate != "" {
+		log.Fatal("only one of -s or -p may be specified")
+	}
+
+	if len(includeFunctions) > 0 && len(excludeFunctions) > 0 {
+		log.Fatal("only one of -i or -x may be specified")
+	}
+
+	if *metatableName == "" && *structToGenerate != "" {
+		*metatableName = gobindluautil.SnakeCase(*structToGenerate)
 	}
 
 	if *workingDir == "" {
@@ -53,37 +79,35 @@ func main() {
 	}
 
 	if *outFile == "" {
-		*outFile = "lua_" + *structName + ".go"
-	}
-
-	var out io.Writer
-	pathToOutput := ""
-
-	if *outFile == "-" {
-		out = os.Stdout
-	} else {
-		pathToOutput = filepath.Join(*workingDir, *outFile)
-		f, err := os.Create(pathToOutput)
-
-		if err != nil {
-			log.Fatalf("error opening file for writing: %s", err)
+		if *structToGenerate != "" {
+			*outFile = "lua_" + *structToGenerate + ".go"
+		} else {
+			*outFile = "lua_" + filepath.Base(*packageToGenerate) + ".go"
 		}
-
-		defer f.Close()
-
-		out = f
 	}
 
-	gen := NewGenerator(*structName, *workingDir, *metatableName)
-	if err := gen.GenerateSourceCode(out, pathToOutput); err != nil {
-		log.Fatalf("error generating struct: %s", err)
+	pathToOutput := filepath.Join(*workingDir, *outFile)
+	gen := NewGenerator(*structToGenerate, *packageToGenerate, *workingDir, *metatableName, includeFunctions, excludeFunctions)
+	outBytes, err := gen.GenerateSourceCode(pathToOutput)
+
+	if len(outBytes) > 0 {
+		if werr := os.WriteFile(pathToOutput, outBytes, 0644); werr != nil {
+			log.Fatal(werr)
+		}
+	}
+
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
 type Generator struct {
-	structToGenerate string
-	wd               string
-	metatableName    string
+	structToGenerate  string
+	packageToGenerate string
+	wd                string
+	metatableName     string
+	includeFunctions  []string
+	excludeFunctions  []string
 
 	packageSource *packages.Package
 	structObject  types.Object
@@ -97,20 +121,23 @@ type Generator struct {
 	userDataFunctions     bytes.Buffer
 }
 
-func NewGenerator(structToGenerate, wd string, metatableName string) *Generator {
+func NewGenerator(structToGenerate, packageToGenerate, wd string, metatableName string, includeFunctions, excludeFunctions []string) *Generator {
 	return &Generator{
-		structToGenerate: structToGenerate,
-		wd:               wd,
-		metatableName:    metatableName,
+		structToGenerate:  structToGenerate,
+		packageToGenerate: packageToGenerate,
+		wd:                wd,
+		metatableName:     metatableName,
+		includeFunctions:  includeFunctions,
+		excludeFunctions:  excludeFunctions,
 	}
 }
 
-func (g *Generator) GenerateSourceCode(out io.Writer, pathToOutput string) error {
+func (g *Generator) GenerateSourceCode(pathToOutput string) ([]byte, error) {
 	if err := g.loadSourcePackage(); err != nil {
-		return fmt.Errorf("failed to load imported go packages: %s", err)
+		return nil, fmt.Errorf("failed to load imported go packages: %s", err)
 	}
 
-	g.StaticFunctions = g.gatherConstructors()
+	g.StaticFunctions = g.gatherFunctionsToGenerate()
 	g.UserDataMethods = g.gatherReceivers()
 
 	g.imports = make(map[string]string)
@@ -120,8 +147,10 @@ func (g *Generator) GenerateSourceCode(out io.Writer, pathToOutput string) error
 	g.addPackageFromFunctions(g.StaticFunctions)
 	g.addPackageFromFunctions(g.UserDataMethods)
 
-	for _, i := range g.GatherFields(true) {
-		g.addPackage(i.DataType)
+	if g.structToGenerate != "" {
+		for _, i := range g.GatherFields(true) {
+			g.addPackage(i.DataType)
+		}
 	}
 
 	g.buildMetatableInitFunction()
@@ -140,20 +169,12 @@ func (g *Generator) GenerateSourceCode(out io.Writer, pathToOutput string) error
 	io.Copy(&code, &g.userDataFunctions)
 
 	originalCodeBytes := code.Bytes()
-
-	if pathToOutput == "" {
-		_, err := io.Copy(out, bytes.NewBuffer(originalCodeBytes))
-		return err
-	}
-
 	formattedCode, err := imports.Process(pathToOutput, originalCodeBytes, nil)
 	if err != nil {
-		_, werr := io.Copy(out, bytes.NewBuffer(originalCodeBytes))
-		return errors.Join(err, werr)
+		return originalCodeBytes, err
 	}
 
-	_, werr := io.Copy(out, bytes.NewBuffer(formattedCode))
-	return werr
+	return formattedCode, nil
 }
 
 func (g *Generator) addPackageFromFunctions(f []functiontype.FunctionType) {
@@ -177,8 +198,13 @@ func (g *Generator) addPackage(d datatype.DataType) {
 func (g *Generator) loadSourcePackage() error {
 	config := &packages.Config{
 		Mode: packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
+		Dir:  g.wd,
 	}
-	pack, err := packages.Load(config, g.wd)
+	var pack []*packages.Package
+	var err error
+
+	pack, err = packages.Load(config, g.wd)
+
 	if err != nil {
 		return err
 	}
@@ -189,14 +215,16 @@ func (g *Generator) loadSourcePackage() error {
 		return fmt.Errorf("packages.Load returned more than one package")
 	}
 
-	g.structObject = g.packageSource.Types.Scope().Lookup(g.structToGenerate)
+	if g.structToGenerate != "" {
+		g.structObject = g.packageSource.Types.Scope().Lookup(g.structToGenerate)
 
-	if g.structObject == nil {
-		return fmt.Errorf("specified type not found")
-	}
+		if g.structObject == nil {
+			return fmt.Errorf("specified type not found")
+		}
 
-	if _, ok := g.structObject.Type().Underlying().(*types.Struct); !ok {
-		return fmt.Errorf("specified type is not a struct")
+		if _, ok := g.structObject.Type().Underlying().(*types.Struct); !ok {
+			return fmt.Errorf("specified type is not a struct")
+		}
 	}
 
 	return nil
@@ -204,6 +232,15 @@ func (g *Generator) loadSourcePackage() error {
 
 func (g *Generator) StructToGenerate() string {
 	return g.structObject.Name()
+}
+
+func (g *Generator) PackageToGenerateFunctionName() string {
+	caser := cases.Title(language.English)
+	return "Register" + caser.String(g.packageToGenerate) + "LuaType"
+}
+
+func (g *Generator) PackageToGenerateMetatableName() string {
+	return g.packageToGenerate
 }
 
 func (g *Generator) StructMetatableIdentifier() string {
@@ -227,6 +264,21 @@ func (g *Generator) SourceUserDataSet() string {
 }
 
 func (g *Generator) buildMetatableInitFunction() {
+	if g.structToGenerate == "" {
+		templ := `
+func {{ .PackageToGenerateFunctionName }}(L *lua.LState) {
+	staticMethodsTable := L.NewTypeMetatable("{{ .PackageToGenerateMetatableName }}")
+	L.SetGlobal("{{ .PackageToGenerateMetatableName }}", staticMethodsTable)
+	{{ range $idx, $fn := .StaticFunctions -}}
+		L.SetField(staticMethodsTable, "{{ $fn.LuaFnName }}", L.NewFunction({{ $fn.SourceFnName }}))
+	{{ end }}
+}
+`
+
+		execTempl(&g.metatableInitFunction, g, templ)
+		return
+	}
+
 	templ := `
 func (goType {{ .StructToGenerate }}) RegisterLuaType(L *lua.LState) {
 	staticMethodsTable := L.NewTypeMetatable("{{ .StructMetatableIdentifier }}")
@@ -251,6 +303,10 @@ func (g *Generator) buildMetatableFunctions() {
 }
 
 func (g *Generator) builderUserDataFunctions() {
+	if g.structToGenerate == "" {
+		return
+	}
+
 	g.generateUserDataPredefinitions()
 	g.generateStructAccessFunction()
 	g.generateStructSetFunction()
@@ -352,7 +408,7 @@ func {{ .FunctionType.SourceFnName }}(L *lua.LState) int {
 			p{{ $idx }} = {{ $param.ReferenceOrDereferenceForAssignmentToField }}ud
 		}
 	{{ end }}
-	{{ .FunctionType.GenerateReturnValues "r" }} := {{ if .FunctionType.Receiver -}}r.{{ end }}{{ .FunctionType.ActualFnName  }}({{ .FunctionType.GenerateParamValues "p" }})
+	{{ .FunctionType.GenerateReturnValues "r" }} {{ if .FunctionType.Receiver -}}r.{{ end }}{{ .FunctionType.ActualFnName  }}({{ .FunctionType.GenerateParamValues "p" }})
 
 	{{ range $idx, $ret := .Ret -}}
 		{{- if $ret.IsError -}}
@@ -385,6 +441,30 @@ func execTempl(out io.Writer, data any, templ string) {
 	}
 }
 
+func (g *Generator) gatherFunctionsToGenerate() []functiontype.FunctionType {
+	if g.structToGenerate != "" {
+		return g.gatherConstructors()
+	}
+
+	return g.gatherAllFunctions()
+}
+
+func (g *Generator) hasFilters() bool {
+	return len(g.includeFunctions) > 0 || len(g.excludeFunctions) > 0
+}
+
+func (g *Generator) checkInclude(str string) bool {
+	if len(g.includeFunctions) > 0 {
+		return slices.Contains(g.includeFunctions, str)
+	}
+
+	if len(g.excludeFunctions) > 0 {
+		return slices.Contains(g.excludeFunctions, str)
+	}
+
+	return true
+}
+
 func (g *Generator) gatherConstructors() []functiontype.FunctionType {
 	ret := make([]functiontype.FunctionType, 0)
 	underylingStructType := g.structObject.Type().Underlying()
@@ -395,10 +475,18 @@ func (g *Generator) gatherConstructors() []functiontype.FunctionType {
 			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Type.Results != nil {
 				fnName := fn.Name.Name
 
+				if g.hasFilters() {
+					if !g.checkInclude(fnName) {
+						continue
+					}
+				} else if !strings.HasPrefix(fnName, constructorPrefix) {
+					continue
+				}
+
 				for _, retType := range fn.Type.Results.List {
 					retType := datatype.CreateDataTypeFromExpr(retType.Type, g.packageSource)
 
-					if retType.Type.Underlying() == underylingStructType && strings.HasPrefix(fnName, constructorPrefix) {
+					if retType.Type.Underlying() == underylingStructType {
 						luaName := "New" + fnName[len(constructorPrefix):]
 						luaName = gobindluautil.SnakeCase(luaName)
 						sourceCodeName := "luaConstructor" + g.StructToGenerate() + fnName
@@ -413,7 +501,37 @@ func (g *Generator) gatherConstructors() []functiontype.FunctionType {
 	return ret
 }
 
+func (g *Generator) gatherAllFunctions() []functiontype.FunctionType {
+	ret := make([]functiontype.FunctionType, 0)
+
+	for _, syn := range g.packageSource.Syntax {
+		for _, dec := range syn.Decls {
+			if fn, ok := dec.(*ast.FuncDecl); ok {
+				fnName := fn.Name.Name
+
+				if g.hasFilters() {
+					if !g.checkInclude(fnName) {
+						continue
+					}
+				} else if !unicode.IsUpper(rune(fnName[0])) || g.PackageToGenerateFunctionName() == fnName {
+					continue
+				}
+
+				luaName := gobindluautil.SnakeCase(fnName)
+				sourceCodeName := "luaFunction" + fnName
+				ret = append(ret, functiontype.CreateFunction(fn, false, luaName, sourceCodeName, g.packageSource))
+			}
+		}
+	}
+
+	return ret
+}
+
 func (g *Generator) gatherReceivers() []functiontype.FunctionType {
+	if g.structToGenerate == "" {
+		return nil
+	}
+
 	ret := make([]functiontype.FunctionType, 0)
 	underylingStructType := g.structObject.Type().Underlying()
 
@@ -422,10 +540,18 @@ func (g *Generator) gatherReceivers() []functiontype.FunctionType {
 			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Recv != nil {
 				fnName := fn.Name.Name
 
+				if g.hasFilters() {
+					if !g.checkInclude(fnName) {
+						continue
+					}
+				} else if !unicode.IsUpper(rune(fnName[0])) || fnName == "RegisterLuaType" || fnName == "LuaMetatableType" {
+					continue
+				}
+
 				for _, recType := range fn.Recv.List {
 					recType := datatype.CreateDataTypeFromExpr(recType.Type, g.packageSource)
 
-					if recType.Type.Underlying() == underylingStructType && unicode.IsUpper(rune(fnName[0])) && fnName != "RegisterLuaType" && fnName != "LuaMetatableType" {
+					if recType.Type.Underlying() == underylingStructType {
 						luaName := gobindluautil.SnakeCase(fnName)
 						sourceCodeName := "luaMethod" + g.StructToGenerate() + fnName
 						ret = append(ret, functiontype.CreateFunction(fn, true, luaName, sourceCodeName, g.packageSource))

@@ -1,13 +1,13 @@
 package maps
 
-//go:generate gobindlua -s User
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua -s User
 type User struct {
 	Name  string
 	Age   int
 	Email string
 }
 
-//go:generate gobindlua -s UserDatabase
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua -s UserDatabase
 type UserDatabase struct {
 	Users map[int]User
 }

@@ -426,6 +426,16 @@ if !ok {
 	return execTempl(templ, args)
 }
 
+func (d *DataType) isEmptyInterface() bool {
+	i, ok := d.Type.Underlying().(*types.Interface)
+
+	if !ok {
+		return false
+	}
+
+	return i.NumEmbeddeds() == 0
+}
+
 func (d *DataType) convertLuaTypeToInterface(variableToCreate string, luaVariable string, paramNum, level int) string {
 	args := struct {
 		VariableToCreate string
@@ -437,6 +447,14 @@ func (d *DataType) convertLuaTypeToInterface(variableToCreate string, luaVariabl
 		LuaVariable:      luaVariable,
 		DeclaredGoType:   d.declaredGoType(),
 		ParamNum:         paramNum,
+	}
+
+	if d.isEmptyInterface() {
+		templ := `
+{{ .VariableToCreate }} := gobindlua.UnwrapLValueToAny({{ .LuaVariable }})
+`
+
+		return execTempl(templ, args)
 	}
 
 	if level == 0 {

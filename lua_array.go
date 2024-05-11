@@ -86,7 +86,7 @@ func MapLuaArrayOrTableToGoSlice[T any](p lua.LValue, mapper func(val lua.LValue
 		sl, ok := ar.Slice.([]T)
 
 		if !ok {
-			return nil, fmt.Errorf("incorrect array type in LuaArray.  expected %T, got %T", sl, t.Value)
+			return nil, fmt.Errorf("incorrect array type in LuaArray.  expected %T, got %T", sl, ar.Slice)
 		}
 
 		return sl, nil
@@ -109,19 +109,7 @@ func MapVariadicArgsToGoSlice[T any](start int, L *lua.LState, mapper func(val l
 	for i := start; i <= L.GetTop(); i++ {
 		val := L.CheckAny(i)
 
-		switch val.(type) {
-		case *lua.LUserData:
-		case *lua.LTable:
-			sl, err := MapLuaArrayOrTableToGoSlice(val, mapper)
-
-			if err != nil {
-				return nil, err
-			}
-
-			ret = append(ret, sl...)
-		default:
-			ret = append(ret, mapper(val))
-		}
+		ret = append(ret, mapper(val))
 	}
 
 	return ret, nil

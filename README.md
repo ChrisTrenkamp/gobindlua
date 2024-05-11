@@ -5,7 +5,8 @@
 `gobindlua` is designed to be used with `go:generate`.  For example:
 
 ```go
-//go:generate gobindlua -s SomeStruct
+// Replace *version* with a gobindlua version.
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua@*version* -s SomeStruct
 type SomeStruct struct {
     SomeStrings []string
 }
@@ -28,28 +29,6 @@ local my_struct = some_struct.new({"foo", "bar", "eggs", "ham"})
 print(my_struct:join()) --[[ foo, bar, eggs, ham ]]
 ```
 
-## Installation
-
-Make sure the absolute path to your `$GOPATH/bin` directory is in your `$PATH` (or wherever your Go binaries are installed).  `go:generate` will not work with relative paths.  e.g.:
-
-```
-export GOPATH="${HOME}/go"
-export PATH="${GOPATH}/bin:${PATH}"
-```
-
-#### From https://pkg.go.dev/
-
-```
-go install github.com/ChrisTrenkamp/gobindlua/gobindlua@latest
-```
-
-#### From source
-
-```
-git clone https://github.com/ChrisTrenkamp/gobindlua
-go build -o $GOPATH/bin/gobindlua gobindlua/gobindlua.go
-```
-
 ## Tutorials
 
 See [the docs](doc) for instructions on how to use `gobindlua`.
@@ -59,12 +38,11 @@ See [the docs](doc) for instructions on how to use `gobindlua`.
 When making changes to `gobindlua`, you can build and test it by running:
 
 ```
-go build -o $GOPATH/bin/gobindlua gobindlua/gobindlua.go && go generate ./... && go test ./...
+go generate ./... && go test ./...
 ```
 
 ## TODO
 
-* Gather user types that are used in the struct, add them as dependencies, and auto-register them in the `RegisterLuaType` method.
-* gobindlua should be able to forgo generating a struct, and only generate bindings for functions.
+* if the -s and -p parameter is unspecified, it should take the line/col set from go:generate (if set) to determine if it should generate a struct or package functions.
 * gobindlua should be able to exclude fields and methods.
 * See if it's possible to auto-generate documentation from the Go documentation on the struct, the struct fields, functions, and methods so it can be used with Lua LSP's (possibly with https://github.com/LuaLS/lua-language-server ?)

@@ -94,13 +94,17 @@ func (f *FunctionType) NumReturns() int {
 }
 
 func (f *FunctionType) GenerateReturnValues(prefix string) string {
+	if len(f.Ret) == 0 {
+		return ""
+	}
+
 	ret := make([]string, 0)
 
 	for i := range f.Ret {
 		ret = append(ret, fmt.Sprintf("%s%d", prefix, i))
 	}
 
-	return strings.Join(ret, ",")
+	return strings.Join(ret, ",") + " := "
 }
 
 func (f *FunctionType) GenerateParamValues(prefix string) string {

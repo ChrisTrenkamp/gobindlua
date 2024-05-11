@@ -13,3 +13,19 @@ func NewUserData(data LuaUserData, L *lua.LState) *lua.LUserData {
 		Metatable: L.GetTypeMetatable(data.LuaMetatableType()),
 	}
 }
+
+func UnwrapLValueToAny(l lua.LValue) any {
+	switch t := l.(type) {
+	case *lua.LUserData:
+		switch s := t.Value.(type) {
+		case *LuaArray:
+			return s.Slice
+		case *LuaMap:
+			return s.Map
+		default:
+			return s
+		}
+	default:
+		return l
+	}
+}

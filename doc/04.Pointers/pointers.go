@@ -1,6 +1,6 @@
 package pointers
 
-//go:generate gobindlua -s SomeStruct
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua -s SomeStruct
 type SomeStruct struct {
 	A *map[*string]*map[string]*[]string
 	B *Sub
@@ -10,7 +10,7 @@ type SomeStruct struct {
 	F []map[*Sub]*int
 }
 
-//go:generate gobindlua -s Sub
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua -s Sub
 type Sub struct {
 	Str *string
 }
