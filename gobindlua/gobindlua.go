@@ -10,7 +10,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"text/template"
 	"unicode"
@@ -37,6 +39,72 @@ func (i *flagArray) Set(value string) error {
 	return nil
 }
 
+var errStructOrPackageUnspecified = fmt.Errorf("-s or -p must be specified")
+var errIncorrectGoGeneratePlacement = fmt.Errorf("go:generate gobindlua directives must be placed behind a struct or package declaration")
+
+func determineFromGoLine(structToGenerate, packageToGenerate *string) error {
+	lineStr := os.Getenv("GOLINE")
+	gofile := os.Getenv("GOFILE")
+
+	if lineStr == "" || gofile == "" {
+		return errStructOrPackageUnspecified
+	}
+
+	line, err := strconv.Atoi(lineStr)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.ReadFile(gofile)
+	if err != nil {
+		return err
+	}
+
+	spl := bytes.Split(f, []byte("\n"))
+	var splLine []byte
+
+	for {
+		if len(spl) < line {
+			return errIncorrectGoGeneratePlacement
+		}
+
+		splLine = spl[line]
+		line++
+
+		splLine = bytes.TrimSpace(splLine)
+
+		if len(splLine) == 0 || bytes.HasPrefix(splLine, []byte("//")) {
+			continue
+		}
+
+		break
+	}
+
+	norm := regexp.MustCompile(`\s+`).ReplaceAllString(string(splLine), " ")
+	normSpl := strings.Split(norm, " ")
+
+	if len(normSpl) < 2 {
+		return errIncorrectGoGeneratePlacement
+	}
+
+	switch normSpl[0] {
+	case "type":
+		if len(normSpl) < 3 {
+			return errIncorrectGoGeneratePlacement
+		}
+
+		if strings.HasPrefix(normSpl[2], "struct") {
+			*structToGenerate = normSpl[1]
+			return nil
+		}
+	case "package":
+		*packageToGenerate = normSpl[1]
+		return nil
+	}
+
+	return errIncorrectGoGeneratePlacement
+}
+
 func main() {
 	includeFunctions := make(flagArray, 0)
 	excludeFunctions := make(flagArray, 0)
@@ -55,7 +123,9 @@ func main() {
 	}
 
 	if *structToGenerate == "" && *packageToGenerate == "" {
-		log.Fatal("-s or -p must be specified")
+		if err := determineFromGoLine(structToGenerate, packageToGenerate); err != nil {
+			log.Fatal(err.Error())
+		}
 	}
 
 	if *structToGenerate != "" && *packageToGenerate != "" {

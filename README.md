@@ -6,7 +6,7 @@
 
 ```go
 // Replace *version* with a gobindlua version.
-//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua@*version* -s SomeStruct
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua@*version*
 type SomeStruct struct {
     SomeStrings []string
 }
@@ -43,7 +43,6 @@ go generate ./... && go test ./...
 
 ## TODO
 
-* if the -s and -p parameter is unspecified, it should take the line/col set from go:generate (if set) to determine if it should generate a struct or package functions.
 * Add a function to LuaArray and LuaMap to map themselves to tables.
 * gobindlua should be able to exclude fields and methods.
 * See if it's possible to auto-generate documentation from the Go documentation on the struct, the struct fields, functions, and methods so it can be used with Lua LSP's (possibly with https://github.com/LuaLS/lua-language-server ?)

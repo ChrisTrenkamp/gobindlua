@@ -7,7 +7,7 @@ type Mammal interface {
 	gobindlua.LuaUserData
 }
 
-//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua -s Dog
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua
 type Dog struct{}
 
 func NewDog() Dog {
@@ -18,7 +18,7 @@ func (d Dog) Sound() string {
 	return "bark"
 }
 
-//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua -s Lion
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua
 type Lion struct{}
 
 func NewLion() Lion {
@@ -29,7 +29,7 @@ func (c Lion) Sound() string {
 	return "rawr"
 }
 
-//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua -s Human
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua
 type Human struct{}
 
 func NewHuman() Human {
@@ -40,7 +40,7 @@ func (h Human) Sound() string {
 	return "burp"
 }
 
-//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua -s MammalList
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua
 type MammalList struct {
 	Pet     Mammal
 	NonPets []Mammal

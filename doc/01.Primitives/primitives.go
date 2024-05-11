@@ -6,13 +6,15 @@ import (
 	primitivesubpackage "github.com/ChrisTrenkamp/gobindlua/doc/01.Primitives/primitive_subpackage"
 )
 
-/*
-This gobindlua call will generate the file `lua_PrimitiveStruct.go`.
-Projects should use "go run github.com/ChrisTrenkamp/gobindlua/gobindlua@version".
-The version is left out of these examples for testing purposes.
-*/
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua
 
-//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua -s PrimitiveStruct
+// This gobindlua call will generate the file `lua_PrimitiveStruct.go`.
+// Projects should use "go run github.com/ChrisTrenkamp/gobindlua/gobindlua@version".
+// The version is left out of these examples for testing purposes.
+// If the go:generate directive is placed behind a struct declaration, gobindlua will
+// automatically generate the bindings for that struct.  Otherwise, you will have
+// to pass in a -s parameter.
+
 type PrimitiveStruct struct {
 	// All exported fields will have bindings created for GopherLua
 	MyBool  bool
