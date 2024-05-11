@@ -11,7 +11,7 @@ const script = `
 --[[
 In order to pass around interfaces, they must implement gobindlua.LuaUserData.
 The interface implementation doesn't necessarily need to be generated with
-gobindlua, but its metadata table must beglobally available.  Otherwise, it
+gobindlua, but its metadata table must be globally available.  Otherwise, it
 will not work.
 ]]
 local mammals = mammal_list.new()

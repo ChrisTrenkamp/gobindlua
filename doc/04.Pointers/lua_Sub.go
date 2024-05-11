@@ -52,7 +52,7 @@ func luaAccessSub(L *lua.LState) int {
 
 	switch p2 {
 	case "str":
-		L.Push((*lua.LString)(p1.Str))
+		L.Push((lua.LString)(*p1.Str))
 	}
 
 	return 1

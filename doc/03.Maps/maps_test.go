@@ -10,18 +10,35 @@ import (
 )
 
 const script = `
---[[ Just like slices, you can use tables to construct Go maps. ]]
 local user1 = user.new("Mike Smith", 42, "mike.smith@example.com")
 local user2 = user.new("Ryan Kennedy", 23, "rkennedy04021@nyu.com")
 local user3 = user.new("Robert Rose", 70, "rrose00011@aol.com")
+
+--[[ Just like slices, you can use tables to construct Go maps. ]]
 local db = user_database.new_from(
 	{
 		[10]=user1,
 		[11]=user2,
-		[12]=user3,
 	}
 )
+
+print("db size: " .. tostring(#db.users))
+db.users[12]=user3
+
+print("Directly indexing the Go map:")
+print("db.users[10]: " .. db.users[10].name)
+print("db.users[11]: " .. db.users[11].name)
+print("db.users[12]: " .. db.users[12].name)
+
 user_db.users = db.users
+
+--[[ And you can convert maps back to tables. ]]
+local db_table = gbl_map.to_table(db.users)
+
+print("Indexing the Lua table:")
+for k,v in pairs(db_table) do
+	print("db_table[" .. tostring(k) .. "] = " .. v.name)
+end
 `
 
 func ExampleUserDatabase() {
@@ -42,10 +59,19 @@ func ExampleUserDatabase() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(string(jsonBytes))
+	fmt.Println("Map result in Go:", string(jsonBytes))
 
 	// Output:
-	//{
+	//db size: 2
+	//Directly indexing the Go map:
+	//db.users[10]: Mike Smith
+	//db.users[11]: Ryan Kennedy
+	//db.users[12]: Robert Rose
+	//Indexing the Lua table:
+	//db_table[10] = Mike Smith
+	//db_table[11] = Ryan Kennedy
+	//db_table[12] = Robert Rose
+	//Map result in Go: {
 	//	"10": {
 	//		"Name": "Mike Smith",
 	//		"Age": 42,

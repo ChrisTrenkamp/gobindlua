@@ -6,7 +6,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const MAP_METATABLE_NAME = "gobindluamap"
+const MAP_METATABLE_NAME = "gbl_map"
 
 func RegisterLuaMap(L *lua.LState) {
 	if L.GetGlobal(MAP_METATABLE_NAME) != lua.LNil {
@@ -14,6 +14,7 @@ func RegisterLuaMap(L *lua.LState) {
 	}
 
 	mt := L.NewTypeMetatable(MAP_METATABLE_NAME)
+	L.SetField(mt, "to_table", L.NewFunction(mapToTable))
 	L.SetGlobal(MAP_METATABLE_NAME, mt)
 
 	mt.RawSetString("__index", L.NewFunction(mapIndex))
@@ -26,6 +27,7 @@ type LuaMap struct {
 	Len      func() int
 	GetValue func(idx lua.LValue) lua.LValue
 	SetValue func(idx lua.LValue, val lua.LValue)
+	ForEach  func(f func(k, v lua.LValue))
 }
 
 func (*LuaMap) LuaMetatableType() string {
@@ -56,6 +58,18 @@ func mapNewIndex(L *lua.LState) int {
 
 func mapLen(L *lua.LState) int {
 	L.Push(lua.LNumber(checkMap(1, L).Len()))
+	return 1
+}
+
+func mapToTable(L *lua.LState) int {
+	m := checkMap(1, L)
+	ret := L.NewTable()
+
+	m.ForEach(func(k, v lua.LValue) {
+		ret.RawSet(k, v)
+	})
+
+	L.Push(ret)
 	return 1
 }
 

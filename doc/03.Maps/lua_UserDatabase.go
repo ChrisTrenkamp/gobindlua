@@ -125,6 +125,15 @@ func luaAccessUserDatabase(L *lua.LState) int {
 
 				(p1.Users)[(int)(keyVal0)] = (User)(*valVal0)
 			},
+			ForEach: func(f0 func(k0, v0 lua.LValue)) {
+				for k0_iter, v0_iter := range p1.Users {
+					retKey0 := k0_iter
+					ret0 := v0_iter
+					key0 := (lua.LNumber)(retKey0)
+					val0 := gobindlua.NewUserData(&ret0, L)
+					f0(key0, val0)
+				}
+			},
 		}, L))
 	}
 

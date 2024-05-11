@@ -46,7 +46,7 @@ func (d *DataType) ConvertGoTypeToLua(variable string) string {
 func convertGoTypeToLua(variable string, variableType *DataType, level int) string {
 	switch t := variableType.Type.Underlying().(type) {
 	case *types.Basic:
-		return fmt.Sprintf(`(%s%s)(%s)`, variableType.dereference(), variableType.luaType(), variable)
+		return fmt.Sprintf(`(%s)(%s%s)`, variableType.luaType(), variableType.dereference(), variable)
 	case *types.Slice:
 		return convertGoTypeToLuaSlice(t, variableType, variable, level)
 	case *types.Map:
@@ -115,6 +115,7 @@ func convertGoTypeToLuaSlice(t *types.Slice, variableType *DataType, variable st
 
 func convertGoTypeToLuaMap(t *types.Map, variableType *DataType, variable string, level int) string {
 	key := CreateDataTypeFrom(t.Key(), variableType.packageSource)
+	keyLuaType := convertGoTypeToLua(fmt.Sprintf("retKey%d", level), &key, level+1)
 	keyGoType := key.convertLuaTypeToGo(fmt.Sprintf("keyVal%d", level), fmt.Sprintf("key%d", level), 3, level+1)
 	keyPointerIndirection := key.ReferenceOrDereferenceForAssignmentToField()
 
@@ -134,6 +135,7 @@ func convertGoTypeToLuaMap(t *types.Map, variableType *DataType, variable string
 	args := struct {
 		Variable              string
 		Level                 int
+		KeyLuaType            string
 		KeyGoType             string
 		KeyDeclaredGoType     string
 		KeyPointerIndirection string
@@ -148,6 +150,7 @@ func convertGoTypeToLuaMap(t *types.Map, variableType *DataType, variable string
 	}{
 		Variable:              variable,
 		Level:                 level,
+		KeyLuaType:            keyLuaType,
 		KeyGoType:             keyGoType,
 		KeyDeclaredGoType:     key.declaredGoType(),
 		KeyPointerIndirection: keyPointerIndirection,
@@ -173,6 +176,15 @@ SetValue: func(key{{ .Level }} lua.LValue, val{{ .Level }} lua.LValue) {
 	{{ .KeyGoType }}
 	{{ .ValGoType }}
 	({{ .VariableDereference }}{{ .Variable }})[({{ .KeyTemplateArg }})({{ .KeyPointerIndirection }}keyVal{{ .Level }})] = ({{ .ValTemplateArg }})({{ .ValPointerIndirection }}valVal{{ .Level }})
+},
+ForEach: func(f{{ .Level }} func(k{{ .Level }}, v{{ .Level }} lua.LValue)) {
+	for k{{ .Level }}_iter,v{{ .Level }}_iter := range {{ .VariableDereference }}{{ .Variable }} {
+		retKey{{ .Level }} := k{{ .Level }}_iter
+		ret{{ .Level }} := v{{ .Level }}_iter
+		key{{ .Level }} := {{ .KeyLuaType }}
+		val{{ .Level }} := {{ .ValLuaType }}
+		f{{ .Level }}(key{{ .Level }}, val{{ .Level }})
+	}
 },
 }, L)`
 

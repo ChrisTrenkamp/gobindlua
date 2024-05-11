@@ -102,6 +102,29 @@ func luaAccessSomeStruct(L *lua.LState) int {
 
 						(*ret0)[(string)(keyVal1)] = (*[]string)(&valVal1)
 					},
+					ForEach: func(f1 func(k1, v1 lua.LValue)) {
+						for k1_iter, v1_iter := range *ret0 {
+							retKey1 := k1_iter
+							ret1 := v1_iter
+							key1 := (lua.LString)(retKey1)
+							val1 := gobindlua.NewUserData(&gobindlua.LuaArray{
+								Slice: ret1,
+								Len:   func() int { return len(*ret1) },
+								Index: func(idx2 int) lua.LValue { return (lua.LString)((*ret1)[idx2]) },
+								SetIndex: func(idx2 int, val2 lua.LValue) {
+
+									t2, ok := val2.(lua.LString)
+
+									if !ok {
+										L.ArgError(3, "argument not a string instance")
+									}
+
+									(*ret1)[idx2] = (string)(t2)
+								},
+							}, L)
+							f1(key1, val1)
+						}
+					},
 				}, L)
 			},
 			SetValue: func(key0 lua.LValue, val0 lua.LValue) {
@@ -145,6 +168,91 @@ func luaAccessSomeStruct(L *lua.LState) int {
 				}
 
 				(*p1.A)[(*string)(&keyVal0)] = (*map[string]*[]string)(&valVal0)
+			},
+			ForEach: func(f0 func(k0, v0 lua.LValue)) {
+				for k0_iter, v0_iter := range *p1.A {
+					retKey0 := k0_iter
+					ret0 := v0_iter
+					key0 := (lua.LString)(*retKey0)
+					val0 := gobindlua.NewUserData(&gobindlua.LuaMap{
+						Map: ret0,
+						Len: func() int { return len(*ret0) },
+						GetValue: func(key1 lua.LValue) lua.LValue {
+
+							keyVal1, ok := key1.(lua.LString)
+
+							if !ok {
+								L.ArgError(3, "argument not a string instance")
+							}
+
+							ret1 := (*ret0)[(string)(keyVal1)]
+							return gobindlua.NewUserData(&gobindlua.LuaArray{
+								Slice: ret1,
+								Len:   func() int { return len(*ret1) },
+								Index: func(idx2 int) lua.LValue { return (lua.LString)((*ret1)[idx2]) },
+								SetIndex: func(idx2 int, val2 lua.LValue) {
+
+									t2, ok := val2.(lua.LString)
+
+									if !ok {
+										L.ArgError(3, "argument not a string instance")
+									}
+
+									(*ret1)[idx2] = (string)(t2)
+								},
+							}, L)
+						},
+						SetValue: func(key1 lua.LValue, val1 lua.LValue) {
+
+							keyVal1, ok := key1.(lua.LString)
+
+							if !ok {
+								L.ArgError(3, "argument not a string instance")
+							}
+
+							valVal1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, func(val2 lua.LValue) string {
+
+								v2, ok := val2.(lua.LString)
+
+								if !ok {
+									L.ArgError(3, "argument not a string instance")
+								}
+
+								return (string)(v2)
+							})
+
+							if err != nil {
+								L.ArgError(3, err.Error())
+							}
+
+							(*ret0)[(string)(keyVal1)] = (*[]string)(&valVal1)
+						},
+						ForEach: func(f1 func(k1, v1 lua.LValue)) {
+							for k1_iter, v1_iter := range *ret0 {
+								retKey1 := k1_iter
+								ret1 := v1_iter
+								key1 := (lua.LString)(retKey1)
+								val1 := gobindlua.NewUserData(&gobindlua.LuaArray{
+									Slice: ret1,
+									Len:   func() int { return len(*ret1) },
+									Index: func(idx2 int) lua.LValue { return (lua.LString)((*ret1)[idx2]) },
+									SetIndex: func(idx2 int, val2 lua.LValue) {
+
+										t2, ok := val2.(lua.LString)
+
+										if !ok {
+											L.ArgError(3, "argument not a string instance")
+										}
+
+										(*ret1)[idx2] = (string)(t2)
+									},
+								}, L)
+								f1(key1, val1)
+							}
+						},
+					}, L)
+					f0(key0, val0)
+				}
 			},
 		}, L))
 
@@ -302,6 +410,15 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						valVal1 := int(valVal1_n)
 
 						((p1.F)[idx0])[(*Sub)(keyVal1)] = (*int)(&valVal1)
+					},
+					ForEach: func(f1 func(k1, v1 lua.LValue)) {
+						for k1_iter, v1_iter := range (p1.F)[idx0] {
+							retKey1 := k1_iter
+							ret1 := v1_iter
+							key1 := gobindlua.NewUserData(retKey1, L)
+							val1 := (lua.LNumber)(*ret1)
+							f1(key1, val1)
+						}
 					},
 				}, L)
 			},

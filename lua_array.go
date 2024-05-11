@@ -6,15 +6,16 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const SLICE_METATABLE_NAME = "gobindluaslice"
+const ARRAY_METATABLE_NAME = "gbl_array"
 
 func RegisterLuaArray(L *lua.LState) {
-	if L.GetGlobal(SLICE_METATABLE_NAME) != lua.LNil {
+	if L.GetGlobal(ARRAY_METATABLE_NAME) != lua.LNil {
 		return
 	}
 
-	mt := L.NewTypeMetatable(SLICE_METATABLE_NAME)
-	L.SetGlobal(SLICE_METATABLE_NAME, mt)
+	mt := L.NewTypeMetatable(ARRAY_METATABLE_NAME)
+	L.SetField(mt, "to_table", L.NewFunction(arrayToTable))
+	L.SetGlobal(ARRAY_METATABLE_NAME, mt)
 
 	mt.RawSetString("__index", L.NewFunction(arrayIndex))
 	mt.RawSetString("__newindex", L.NewFunction(arrayNewIndex))
@@ -29,7 +30,7 @@ type LuaArray struct {
 }
 
 func (*LuaArray) LuaMetatableType() string {
-	return SLICE_METATABLE_NAME
+	return ARRAY_METATABLE_NAME
 }
 
 func checkArray(param int, L *lua.LState) *LuaArray {
@@ -71,6 +72,19 @@ func arrayNewIndex(L *lua.LState) int {
 
 func arrayLen(L *lua.LState) int {
 	L.Push(lua.LNumber(checkArray(1, L).Len()))
+	return 1
+}
+
+func arrayToTable(L *lua.LState) int {
+	slice := checkArray(1, L)
+	ret := L.NewTable()
+	len := slice.Len()
+
+	for i := len - 1; i >= 0; i-- {
+		ret.RawSetInt(i+1, slice.Index(i))
+	}
+
+	L.Push(ret)
 	return 1
 }
 
