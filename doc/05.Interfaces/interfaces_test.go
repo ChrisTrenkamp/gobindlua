@@ -29,11 +29,7 @@ func ExampleMammalList() {
 	L := lua.NewState()
 	defer L.Close()
 
-	Dog{}.RegisterLuaType(L)
-	Lion{}.RegisterLuaType(L)
-	Human{}.RegisterLuaType(L)
-	MammalList{}.RegisterLuaType(L)
-	gobindlua.RegisterLuaArray(L)
+	gobindlua.Register(L, Dog{}, Lion{}, Human{}, MammalList{})
 
 	if err := L.DoString(script); err != nil {
 		log.Fatal(err)

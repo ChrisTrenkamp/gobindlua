@@ -33,8 +33,7 @@ func ExamplePrimitiveStruct() {
 	L := lua.NewState()
 	defer L.Close()
 
-	PrimitiveStruct{}.RegisterLuaType(L)
-	gobindlua.RegisterLuaArray(L)
+	gobindlua.Register(L, PrimitiveStruct{})
 
 	if err := L.DoString(script); err != nil {
 		log.Fatal(err)

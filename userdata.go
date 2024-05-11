@@ -2,6 +2,33 @@ package gobindlua
 
 import lua "github.com/yuin/gopher-lua"
 
+type LuaRegister interface {
+	RegisterLuaType(L *lua.LState)
+}
+
+func Register(L *lua.LState, r ...LuaRegister) {
+	RegisterLuaArray(L)
+	RegisterLuaMap(L)
+
+	for _, i := range r {
+		i.RegisterLuaType(L)
+	}
+}
+
+func Funcs(r func(*lua.LState)) LuaRegister {
+	return &internalRegistrar{
+		reg: r,
+	}
+}
+
+type internalRegistrar struct {
+	reg func(l *lua.LState)
+}
+
+func (i *internalRegistrar) RegisterLuaType(L *lua.LState) {
+	i.reg(L)
+}
+
 type LuaUserData interface {
 	LuaMetatableType() string
 }

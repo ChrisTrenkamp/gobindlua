@@ -33,9 +33,7 @@ func ExampleVector() {
 	L := lua.NewState()
 	defer L.Close()
 
-	Vector{}.RegisterLuaType(L)
-	Matrix{}.RegisterLuaType(L)
-	gobindlua.RegisterLuaArray(L)
+	gobindlua.Register(L, Vector{}, Matrix{})
 
 	matrix := Matrix{}
 	L.SetGlobal("m", gobindlua.NewUserData(&matrix, L))

@@ -15,8 +15,7 @@ func Example() {
 	L := lua.NewState()
 	defer L.Close()
 
-	RegisterFunctionsLuaType(L)
-	gobindlua.RegisterLuaArray(L)
+	gobindlua.Register(L, gobindlua.Funcs(RegisterFunctionsLuaType))
 
 	if err := L.DoString(script); err != nil {
 		log.Fatal(err)

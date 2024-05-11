@@ -28,9 +28,7 @@ func ExampleUserDatabase() {
 	L := lua.NewState()
 	defer L.Close()
 
-	User{}.RegisterLuaType(L)
-	UserDatabase{}.RegisterLuaType(L)
-	gobindlua.RegisterLuaMap(L)
+	gobindlua.Register(L, User{}, UserDatabase{})
 
 	user_db := UserDatabase{}
 	L.SetGlobal("user_db", gobindlua.NewUserData(&user_db, L))
