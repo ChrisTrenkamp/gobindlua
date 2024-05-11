@@ -23,10 +23,12 @@ print("MyInt: " .. tostring(data.my_int))
 print("MyInt64: " .. tostring(data.my_int64))
 print("MyFloat: " .. tostring(data.my_float))
 print("MyString: " .. tostring(data.my_string))
+print("will_be_excluded has been excluded: " .. tostring(data.will_be_excluded == nil))
 
 print("DivideMyInt: " .. tostring(data:divide_my_int(2)))
 local _, err = pcall(function () data:divide_my_int(0) end)
 print("DivideMyInt error: " .. err)
+
 `
 
 func ExamplePrimitiveStruct() {
@@ -52,13 +54,15 @@ func ExamplePrimitiveStruct() {
 	// MyInt64: 3735928559
 	// MyFloat: 3.14
 	// MyString: all your lua are belong to us
+	// will_be_excluded has been excluded: true
 	// DivideMyInt: 21
-	// DivideMyInt error: <string>:17: divide by zero error
-	// {
-	// 	"MyBool": true,
-	// 	"MyInt": 42,
-	// 	"MyInt64": 3735928559,
-	// 	"MyFloat": 3.14,
-	// 	"MyString": "all your lua are belong to us"
-	// }
+	// DivideMyInt error: <string>:18: divide by zero error
+	//{
+	//	"MyBool": true,
+	//	"MyInt": 42,
+	//	"MyInt64": 3735928559,
+	//	"MyFloat": 3.14,
+	//	"SomeString": "all your lua are belong to us",
+	//	"WillBeExcluded": ""
+	//}
 }

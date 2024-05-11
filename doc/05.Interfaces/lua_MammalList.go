@@ -2,6 +2,8 @@
 package interfaces
 
 import (
+	"fmt"
+
 	"github.com/ChrisTrenkamp/gobindlua"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -69,6 +71,9 @@ func luaAccessMammalList(L *lua.LState) int {
 				(p1.NonPets)[idx0] = (Mammal)(t0)
 			},
 		}, L))
+
+	default:
+		L.Push(lua.LNil)
 	}
 
 	return 1
@@ -113,7 +118,10 @@ func luaSetMammalList(L *lua.LState) int {
 		}
 
 		p1.NonPets = ud
+
+	default:
+		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
 	}
 
-	return 1
+	return 0
 }

@@ -2,6 +2,8 @@
 package maps
 
 import (
+	"fmt"
+
 	"github.com/ChrisTrenkamp/gobindlua"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -135,6 +137,9 @@ func luaAccessUserDatabase(L *lua.LState) int {
 				}
 			},
 		}, L))
+
+	default:
+		L.Push(lua.LNil)
 	}
 
 	return 1
@@ -175,7 +180,10 @@ func luaSetUserDatabase(L *lua.LState) int {
 		}
 
 		p1.Users = ud
+
+	default:
+		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
 	}
 
-	return 1
+	return 0
 }

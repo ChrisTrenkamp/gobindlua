@@ -2,6 +2,8 @@
 package slices
 
 import (
+	"fmt"
+
 	"github.com/ChrisTrenkamp/gobindlua"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -119,6 +121,9 @@ func luaAccessMatrix(L *lua.LState) int {
 
 	case "string":
 		L.Push(L.NewFunction(luaMethodMatrixString))
+
+	default:
+		L.Push(lua.LNil)
 	}
 
 	return 1
@@ -156,9 +161,12 @@ func luaSetMatrix(L *lua.LState) int {
 		}
 
 		p1.Elements = ud
+
+	default:
+		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
 	}
 
-	return 1
+	return 0
 }
 
 func luaMethodMatrixString(L *lua.LState) int {

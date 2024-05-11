@@ -2,6 +2,8 @@
 package primitives
 
 import (
+	"fmt"
+
 	"github.com/ChrisTrenkamp/gobindlua"
 	primitivesubpackage "github.com/ChrisTrenkamp/gobindlua/doc/01.Primitives/primitive_subpackage"
 	lua "github.com/yuin/gopher-lua"
@@ -58,10 +60,13 @@ func luaAccessPrimitiveStruct(L *lua.LState) int {
 		L.Push((lua.LNumber)(p1.MyFloat))
 
 	case "my_string":
-		L.Push((lua.LString)(p1.MyString))
+		L.Push((lua.LString)(p1.SomeString))
 
 	case "divide_my_int":
 		L.Push(L.NewFunction(luaMethodPrimitiveStructDivideMyInt))
+
+	default:
+		L.Push(lua.LNil)
 	}
 
 	return 1
@@ -90,10 +95,13 @@ func luaSetPrimitiveStruct(L *lua.LState) int {
 
 	case "my_string":
 		ud := string(L.CheckString(3))
-		p1.MyString = ud
+		p1.SomeString = ud
+
+	default:
+		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
 	}
 
-	return 1
+	return 0
 }
 
 func luaMethodPrimitiveStructDivideMyInt(L *lua.LState) int {

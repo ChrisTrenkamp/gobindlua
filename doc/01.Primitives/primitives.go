@@ -21,8 +21,11 @@ type PrimitiveStruct struct {
 	MyInt   int32
 	MyInt64 int64
 	// Notice how `lua_PrimitiveStruct.go` will properly cast the float64 to this named type
-	MyFloat  primitivesubpackage.SomeFloat64
-	MyString string
+	MyFloat primitivesubpackage.SomeFloat64
+	// You can use tags to explicitly declare the Lua name of the field.
+	SomeString string `gobindlua:"my_string"`
+	// You can also exclude fields
+	WillBeExcluded string `gobindlua:"-"`
 }
 
 // Functions that return the type you're generating will be automatically bound

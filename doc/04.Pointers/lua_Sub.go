@@ -2,6 +2,8 @@
 package pointers
 
 import (
+	"fmt"
+
 	"github.com/ChrisTrenkamp/gobindlua"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -53,6 +55,9 @@ func luaAccessSub(L *lua.LState) int {
 	switch p2 {
 	case "str":
 		L.Push((lua.LString)(*p1.Str))
+
+	default:
+		L.Push(lua.LNil)
 	}
 
 	return 1
@@ -66,7 +71,10 @@ func luaSetSub(L *lua.LState) int {
 	case "str":
 		ud := string(L.CheckString(3))
 		p1.Str = &ud
+
+	default:
+		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
 	}
 
-	return 1
+	return 0
 }

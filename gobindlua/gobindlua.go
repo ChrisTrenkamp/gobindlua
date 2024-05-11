@@ -218,7 +218,7 @@ func (g *Generator) GenerateSourceCode(pathToOutput string) ([]byte, error) {
 	g.addPackageFromFunctions(g.UserDataMethods)
 
 	if g.structToGenerate != "" {
-		for _, i := range g.GatherFields(true) {
+		for _, i := range g.GatherFields() {
 			g.addPackage(i.DataType)
 		}
 	}
@@ -405,13 +405,13 @@ func {{ .UserDataCheckFn }}(param int, L *lua.LState) *{{ .StructToGenerate }} {
 func (g *Generator) generateStructAccessFunction() {
 	templ := `
 func {{ .SourceUserDataAccess }}(L *lua.LState) int {
-	{{- if gt (len (.GatherFields false)) 0 }}
+	{{- if gt (len .GatherFields) 0 }}
 	p1 := {{ .UserDataCheckFn }}(1, L)
 	{{- end }}
 	p2 := L.CheckString(2)
 
 	switch p2 {
-		{{- range $idx, $field := .GatherFields false }}
+		{{- range $idx, $field := .GatherFields }}
 	case "{{ $field.LuaName }}":
 		L.Push({{ $field.DataType.ConvertGoTypeToLua (printf "p1.%s" $field.FieldName) }})
 		{{ end -}}
@@ -419,7 +419,10 @@ func {{ .SourceUserDataAccess }}(L *lua.LState) int {
 		{{- range $idx, $method := .UserDataMethods }}
 	case "{{ $method.LuaFnName }}":
 		L.Push(L.NewFunction({{ $method.SourceFnName }}))
-		{{ end -}}
+		{{ end }}
+
+	default:
+		L.Push(lua.LNil)
 	}
 
 	return 1
@@ -432,20 +435,23 @@ func {{ .SourceUserDataAccess }}(L *lua.LState) int {
 func (g *Generator) generateStructSetFunction() {
 	templ := `
 func {{ .SourceUserDataSet }}(L *lua.LState) int {
-	{{- if gt (len (.GatherFields false)) 0 }}
+	{{- if gt (len .GatherFields) 0 }}
 	p1 := {{ .UserDataCheckFn }}(1, L)
 	{{- end }}
 	p2 := L.CheckString(2)
 
 	switch p2 {
-		{{- range $idx, $field := .GatherFields false }}
+		{{- range $idx, $field := .GatherFields }}
 	case "{{ $field.LuaName }}":
 		{{ $field.DataType.ConvertLuaTypeToGo "ud" (printf "%s(3)" $field.DataType.LuaParamType) 3 }}
 		p1.{{ $field.FieldName }} = {{ $field.DataType.ReferenceOrDereferenceForAssignmentToField }}ud
-		{{ end -}}
+		{{ end }}
+
+	default:
+		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
 	}
 
-	return 1
+	return 0
 }
 `
 
@@ -635,15 +641,17 @@ func (g *Generator) gatherReceivers() []functiontype.FunctionType {
 	return ret
 }
 
-func (g *Generator) GatherFields(gatherPrivate bool) []structfield.StructField {
+func (g *Generator) GatherFields() []structfield.StructField {
 	ret := make([]structfield.StructField, 0)
 	str := g.structObject.Type().Underlying().(*types.Struct)
 
 	for i := 0; i < str.NumFields(); i++ {
 		field := str.Field(i)
+		tag := str.Tag(i)
+		luaName := structfield.GetLuaNameFromTag(field, tag)
 
-		if gatherPrivate || field.Exported() {
-			ret = append(ret, structfield.CreateStructField(field, g.packageSource))
+		if luaName != "" {
+			ret = append(ret, structfield.CreateStructField(field, luaName, g.packageSource))
 		}
 	}
 

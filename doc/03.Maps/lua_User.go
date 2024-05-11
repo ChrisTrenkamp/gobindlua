@@ -2,6 +2,8 @@
 package maps
 
 import (
+	"fmt"
+
 	"github.com/ChrisTrenkamp/gobindlua"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -73,6 +75,9 @@ func luaAccessUser(L *lua.LState) int {
 
 	case "email":
 		L.Push((lua.LString)(p1.Email))
+
+	default:
+		L.Push(lua.LNil)
 	}
 
 	return 1
@@ -94,7 +99,10 @@ func luaSetUser(L *lua.LState) int {
 	case "email":
 		ud := string(L.CheckString(3))
 		p1.Email = ud
+
+	default:
+		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
 	}
 
-	return 1
+	return 0
 }

@@ -2,6 +2,8 @@
 package pointers
 
 import (
+	"fmt"
+
 	"github.com/ChrisTrenkamp/gobindlua"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -456,6 +458,9 @@ func luaAccessSomeStruct(L *lua.LState) int {
 				(p1.F)[idx0] = (map[*Sub]*int)(t0)
 			},
 		}, L))
+
+	default:
+		L.Push(lua.LNil)
 	}
 
 	return 1
@@ -642,7 +647,10 @@ func luaSetSomeStruct(L *lua.LState) int {
 		}
 
 		p1.F = ud
+
+	default:
+		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
 	}
 
-	return 1
+	return 0
 }

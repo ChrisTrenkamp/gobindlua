@@ -2,6 +2,8 @@
 package interfaces
 
 import (
+	"fmt"
+
 	"github.com/ChrisTrenkamp/gobindlua"
 	lua "github.com/yuin/gopher-lua"
 )
@@ -45,6 +47,9 @@ func luaAccessHuman(L *lua.LState) int {
 	switch p2 {
 	case "sound":
 		L.Push(L.NewFunction(luaMethodHumanSound))
+
+	default:
+		L.Push(lua.LNil)
 	}
 
 	return 1
@@ -54,9 +59,12 @@ func luaSetHuman(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
+
+	default:
+		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
 	}
 
-	return 1
+	return 0
 }
 
 func luaMethodHumanSound(L *lua.LState) int {
