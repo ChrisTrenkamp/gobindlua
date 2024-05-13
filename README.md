@@ -43,4 +43,4 @@ go generate ./... && go test ./...
 
 ## TODO
 
-* See if it's possible to auto-generate documentation from the Go documentation on the struct, the struct fields, functions, and methods so it can be used with Lua LSP's (possibly with https://github.com/LuaLS/lua-language-server ?)
+* Interfaces implementations have to be declared excplicitly with the -im parameter.  This can get tedious.  Investigate a way to automatically detect if a struct implements an interface and have the class extend them in the Lua definitions.  Or at the very least, make a utility program that verifies the declarations are correct, or are missing entries.

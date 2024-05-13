@@ -2,11 +2,11 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"go/ast"
 	"go/types"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,13 +14,11 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"text/template"
 	"unicode"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/imports"
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/functiontype"
@@ -42,7 +40,7 @@ func (i *flagArray) Set(value string) error {
 var errStructOrPackageUnspecified = fmt.Errorf("-s or -p must be specified")
 var errIncorrectGoGeneratePlacement = fmt.Errorf("go:generate gobindlua directives must be placed behind a struct or package declaration")
 
-func determineFromGoLine(structToGenerate, packageToGenerate *string) error {
+func determineFromGoLine(structToGenerate, packageToGenerate, interfaceToGenerate *string) error {
 	lineStr := os.Getenv("GOLINE")
 	gofile := os.Getenv("GOFILE")
 
@@ -97,6 +95,11 @@ func determineFromGoLine(structToGenerate, packageToGenerate *string) error {
 			*structToGenerate = normSpl[1]
 			return nil
 		}
+
+		if strings.HasPrefix(normSpl[2], "interface") {
+			*interfaceToGenerate = normSpl[1]
+			return nil
+		}
 	case "package":
 		*packageToGenerate = normSpl[1]
 		return nil
@@ -105,16 +108,29 @@ func determineFromGoLine(structToGenerate, packageToGenerate *string) error {
 	return errIncorrectGoGeneratePlacement
 }
 
+func numNotEmpty(str ...*string) int {
+	ret := 0
+
+	for _, i := range str {
+		if *i != "" {
+			ret++
+		}
+	}
+
+	return ret
+}
+
 func main() {
 	includeFunctions := make(flagArray, 0)
 	excludeFunctions := make(flagArray, 0)
-	workingDir := flag.String("d", "", "The Go source directory to generate the bindings from. Uses the current working directory if empty")
-	structToGenerate := flag.String("s", "", "Generate the GopherLua bindings for the given struct.")
-	packageToGenerate := flag.String("p", "", "Generate the GopherLua bindings from the functions in the -d parameter.")
+	implementsDeclarations := make(flagArray, 0)
+	workingDir := flag.String("d", "", "The Go source directory to generate the bindings from. Uses the current working directory if empty.")
+	structToGenerate := flag.String("struct", "", "Generate GopherLua bindings and Lua definitions for the given struct.")
+	packageToGenerate := flag.String("package", "", "Generate GopherLua bindings and Lua definitions for the given package.")
+	interfaceToGenerate := flag.String("interface", "", "Generate Lua definitions for the given interface.")
 	flag.Var(&includeFunctions, "i", "Only include the given function or method names.")
 	flag.Var(&excludeFunctions, "x", "Exclude the given function or method names.")
-	metatableName := flag.String("t", "", "Generate a LuaMetatableType method that returns the given value.  Takes the snake_case form of -s if unspecified.")
-	outFile := flag.String("o", "", "The output file.  Defaults to lua_structname.go if empty.")
+	flag.Var(&implementsDeclarations, "im", "Declares the given struct implements an interface.")
 
 	flag.Parse()
 
@@ -122,22 +138,18 @@ func main() {
 		log.Fatal("gobindlua does not accept arguments")
 	}
 
-	if *structToGenerate == "" && *packageToGenerate == "" {
-		if err := determineFromGoLine(structToGenerate, packageToGenerate); err != nil {
+	if *structToGenerate == "" && *packageToGenerate == "" && *interfaceToGenerate == "" {
+		if err := determineFromGoLine(structToGenerate, packageToGenerate, interfaceToGenerate); err != nil {
 			log.Fatal(err.Error())
 		}
 	}
 
-	if *structToGenerate != "" && *packageToGenerate != "" {
-		log.Fatal("only one of -s or -p may be specified")
+	if numNotEmpty(structToGenerate, packageToGenerate, interfaceToGenerate) != 1 {
+		log.Fatal("only one of -struct, -package, or -interface may be specified")
 	}
 
 	if len(includeFunctions) > 0 && len(excludeFunctions) > 0 {
 		log.Fatal("only one of -i or -x may be specified")
-	}
-
-	if *metatableName == "" && *structToGenerate != "" {
-		*metatableName = gobindluautil.SnakeCase(*structToGenerate)
 	}
 
 	if *workingDir == "" {
@@ -148,20 +160,48 @@ func main() {
 		*workingDir = wd
 	}
 
-	if *outFile == "" {
-		if *structToGenerate != "" {
-			*outFile = "lua_" + *structToGenerate + ".go"
-		} else {
-			*outFile = "lua_" + filepath.Base(*packageToGenerate) + ".go"
+	outFile := ""
+
+	if *structToGenerate != "" {
+		outFile = "lua_" + *structToGenerate
+	} else if *packageToGenerate != "" {
+		outFile = "lua_" + filepath.Base(*packageToGenerate)
+	} else {
+		outFile = "lua_" + *interfaceToGenerate
+	}
+
+	basePathToOutput := filepath.Join(*workingDir, outFile)
+
+	var goBytes []byte
+	var luaDefBytes []byte
+	var err error
+
+	if *structToGenerate != "" || *packageToGenerate != "" {
+		gen := NewStructGenerator(
+			*structToGenerate,
+			*packageToGenerate,
+			*workingDir,
+			basePathToOutput+".go",
+			includeFunctions,
+			excludeFunctions,
+			implementsDeclarations,
+		)
+		goBytes, luaDefBytes, err = gen.GenerateSourceCode()
+	} else if *interfaceToGenerate != "" {
+		gen := NewInterfaceGenerator(*interfaceToGenerate, *workingDir)
+		luaDefBytes, err = gen.GenerateSourceCode()
+	}
+
+	if len(goBytes) > 0 {
+		outPath := basePathToOutput + ".go"
+		if werr := os.WriteFile(outPath, goBytes, 0644); werr != nil {
+			log.Fatal(werr)
 		}
 	}
 
-	pathToOutput := filepath.Join(*workingDir, *outFile)
-	gen := NewGenerator(*structToGenerate, *packageToGenerate, *workingDir, *metatableName, includeFunctions, excludeFunctions)
-	outBytes, err := gen.GenerateSourceCode(pathToOutput)
-
-	if len(outBytes) > 0 {
-		if werr := os.WriteFile(pathToOutput, outBytes, 0644); werr != nil {
+	if len(luaDefBytes) > 0 {
+		outPath := basePathToOutput + "_definitions.lua"
+		if werr := os.WriteFile(outPath, luaDefBytes, 0644); werr != nil {
 			log.Fatal(werr)
 		}
 	}
@@ -171,19 +211,21 @@ func main() {
 	}
 }
 
-type Generator struct {
-	structToGenerate  string
-	packageToGenerate string
-	wd                string
-	metatableName     string
-	includeFunctions  []string
-	excludeFunctions  []string
+type StructGenerator struct {
+	structToGenerate       string
+	packageToGenerate      string
+	wd                     string
+	pathToOutput           string
+	includeFunctions       []string
+	excludeFunctions       []string
+	implementsDeclarations []string
 
 	packageSource *packages.Package
 	structObject  types.Object
 
 	StaticFunctions []functiontype.FunctionType
 	UserDataMethods []functiontype.FunctionType
+	Fields          []structfield.StructField
 
 	imports               map[string]string
 	metatableInitFunction bytes.Buffer
@@ -191,24 +233,26 @@ type Generator struct {
 	userDataFunctions     bytes.Buffer
 }
 
-func NewGenerator(structToGenerate, packageToGenerate, wd string, metatableName string, includeFunctions, excludeFunctions []string) *Generator {
-	return &Generator{
-		structToGenerate:  structToGenerate,
-		packageToGenerate: packageToGenerate,
-		wd:                wd,
-		metatableName:     metatableName,
-		includeFunctions:  includeFunctions,
-		excludeFunctions:  excludeFunctions,
+func NewStructGenerator(structToGenerate, packageToGenerate, wd, pathToOutput string, includeFunctions, excludeFunctions, implementsDeclarations []string) *StructGenerator {
+	return &StructGenerator{
+		structToGenerate:       structToGenerate,
+		packageToGenerate:      packageToGenerate,
+		wd:                     wd,
+		pathToOutput:           pathToOutput,
+		includeFunctions:       includeFunctions,
+		excludeFunctions:       excludeFunctions,
+		implementsDeclarations: implementsDeclarations,
 	}
 }
 
-func (g *Generator) GenerateSourceCode(pathToOutput string) ([]byte, error) {
+func (g *StructGenerator) GenerateSourceCode() ([]byte, []byte, error) {
 	if err := g.loadSourcePackage(); err != nil {
-		return nil, fmt.Errorf("failed to load imported go packages: %s", err)
+		return nil, nil, fmt.Errorf("failed to load imported go packages: %s", err)
 	}
 
 	g.StaticFunctions = g.gatherFunctionsToGenerate()
 	g.UserDataMethods = g.gatherReceivers()
+	g.Fields = g.gatherFields()
 
 	g.imports = make(map[string]string)
 	g.imports["github.com/yuin/gopher-lua"] = "lua"
@@ -217,8 +261,8 @@ func (g *Generator) GenerateSourceCode(pathToOutput string) ([]byte, error) {
 	g.addPackageFromFunctions(g.StaticFunctions)
 	g.addPackageFromFunctions(g.UserDataMethods)
 
-	if g.structToGenerate != "" {
-		for _, i := range g.GatherFields() {
+	if g.IsGeneratingStruct() {
+		for _, i := range g.Fields {
 			g.addPackage(i.DataType)
 		}
 	}
@@ -227,27 +271,12 @@ func (g *Generator) GenerateSourceCode(pathToOutput string) ([]byte, error) {
 	g.buildMetatableFunctions()
 	g.builderUserDataFunctions()
 
-	code := bytes.Buffer{}
-	fmt.Fprintf(&code, "// Code generated by gobindlua; DO NOT EDIT.\n")
-	fmt.Fprintf(&code, "package %s\n\nimport (\n", g.packageSource.Types.Name())
-	for pkg, name := range g.imports {
-		fmt.Fprintf(&code, "\t%s \"%s\"\n", name, pkg)
-	}
-	fmt.Fprintf(&code, ")\n")
-	io.Copy(&code, &g.metatableInitFunction)
-	io.Copy(&code, &g.metatableFunctions)
-	io.Copy(&code, &g.userDataFunctions)
-
-	originalCodeBytes := code.Bytes()
-	formattedCode, err := imports.Process(pathToOutput, originalCodeBytes, nil)
-	if err != nil {
-		return originalCodeBytes, err
-	}
-
-	return formattedCode, nil
+	goCode, gerr := g.generateGoCode()
+	luaDef, lerr := g.generateLuaDefinitions()
+	return goCode, luaDef, errors.Join(gerr, lerr)
 }
 
-func (g *Generator) addPackageFromFunctions(f []functiontype.FunctionType) {
+func (g *StructGenerator) addPackageFromFunctions(f []functiontype.FunctionType) {
 	for _, i := range f {
 		for _, p := range i.Params {
 			g.addPackage(p.DataType)
@@ -259,33 +288,21 @@ func (g *Generator) addPackageFromFunctions(f []functiontype.FunctionType) {
 	}
 }
 
-func (g *Generator) addPackage(d datatype.DataType) {
+func (g *StructGenerator) addPackage(d datatype.DataType) {
 	if p := d.Package(); p != "" && p != g.packageSource.ID {
 		g.imports[p] = ""
 	}
 }
 
-func (g *Generator) loadSourcePackage() error {
-	config := &packages.Config{
-		Mode: packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
-		Dir:  g.wd,
-	}
-	var pack []*packages.Package
+func (g *StructGenerator) loadSourcePackage() error {
 	var err error
-
-	pack, err = packages.Load(config, g.wd)
+	g.packageSource, err = gobindluautil.LoadSourcePackage(g.wd)
 
 	if err != nil {
 		return err
 	}
 
-	if len(pack) == 1 {
-		g.packageSource = pack[0]
-	} else {
-		return fmt.Errorf("packages.Load returned more than one package")
-	}
-
-	if g.structToGenerate != "" {
+	if g.IsGeneratingStruct() {
 		g.structObject = g.packageSource.Types.Scope().Lookup(g.structToGenerate)
 
 		if g.structObject == nil {
@@ -300,236 +317,56 @@ func (g *Generator) loadSourcePackage() error {
 	return nil
 }
 
-func (g *Generator) StructToGenerate() string {
+func (g *StructGenerator) StructToGenerate() string {
 	return g.structObject.Name()
 }
 
-func (g *Generator) PackageToGenerateFunctionName() string {
+func (g *StructGenerator) PackageToGenerateFunctionName() string {
 	caser := cases.Title(language.English)
 	return "Register" + caser.String(g.packageToGenerate) + "LuaType"
 }
 
-func (g *Generator) PackageToGenerateMetatableName() string {
+func (g *StructGenerator) PackageToGenerateMetatableName() string {
 	return g.packageToGenerate
 }
 
-func (g *Generator) StructMetatableIdentifier() string {
+func (g *StructGenerator) StructMetatableIdentifier() string {
 	return gobindluautil.SnakeCase(g.StructToGenerate())
 }
 
-func (g *Generator) StructMetatableFieldsIdentifier() string {
-	return gobindluautil.SnakeCase(g.StructToGenerate() + "Fields")
+func (g *StructGenerator) StructMetatableFieldsIdentifier() string {
+	return gobindluautil.StructFieldMetadataName(g.StructToGenerate())
 }
 
-func (g *Generator) UserDataCheckFn() string {
+func (g *StructGenerator) UserDataCheckFn() string {
 	return "luaCheck" + g.StructToGenerate()
 }
 
-func (g *Generator) SourceUserDataAccess() string {
+func (g *StructGenerator) SourceUserDataAccess() string {
 	return "luaAccess" + g.StructToGenerate()
 }
 
-func (g *Generator) SourceUserDataSet() string {
+func (g *StructGenerator) SourceUserDataSet() string {
 	return "luaSet" + g.StructToGenerate()
 }
 
-func (g *Generator) buildMetatableInitFunction() {
-	if g.structToGenerate == "" {
-		templ := `
-func {{ .PackageToGenerateFunctionName }}(L *lua.LState) {
-	staticMethodsTable := L.NewTypeMetatable("{{ .PackageToGenerateMetatableName }}")
-	L.SetGlobal("{{ .PackageToGenerateMetatableName }}", staticMethodsTable)
-	{{ range $idx, $fn := .StaticFunctions -}}
-		L.SetField(staticMethodsTable, "{{ $fn.LuaFnName }}", L.NewFunction({{ $fn.SourceFnName }}))
-	{{ end }}
-}
-`
-
-		execTempl(&g.metatableInitFunction, g, templ)
-		return
-	}
-
-	templ := `
-func (goType {{ .StructToGenerate }}) RegisterLuaType(L *lua.LState) {
-	staticMethodsTable := L.NewTypeMetatable("{{ .StructMetatableIdentifier }}")
-	L.SetGlobal("{{ .StructMetatableIdentifier }}", staticMethodsTable)
-	{{ range $idx, $fn := .StaticFunctions -}}
-		L.SetField(staticMethodsTable, "{{ $fn.LuaFnName }}", L.NewFunction({{ $fn.SourceFnName }}))
-	{{ end }}
-	fieldsTable := L.NewTypeMetatable(goType.LuaMetatableType())
-	L.SetGlobal(goType.LuaMetatableType(), fieldsTable)
-	L.SetField(fieldsTable, "__index", L.NewFunction({{ .SourceUserDataAccess }}))
-	L.SetField(fieldsTable, "__newindex", L.NewFunction({{ .SourceUserDataSet }}))
-}
-`
-
-	execTempl(&g.metatableInitFunction, g, templ)
+func (g *StructGenerator) IsGeneratingStruct() bool {
+	return g.structToGenerate != ""
 }
 
-func (g *Generator) buildMetatableFunctions() {
-	for _, i := range g.StaticFunctions {
-		generateLuaFunctionWrapper(&g.metatableFunctions, g, i)
-	}
-}
-
-func (g *Generator) builderUserDataFunctions() {
-	if g.structToGenerate == "" {
-		return
-	}
-
-	g.generateUserDataPredefinitions()
-	g.generateStructAccessFunction()
-	g.generateStructSetFunction()
-	g.generateStructMethods()
-}
-
-func (g *Generator) generateUserDataPredefinitions() {
-	templ := `
-func (r *{{ .StructToGenerate }}) LuaMetatableType() string {
-	return "{{ .StructMetatableFieldsIdentifier }}"
-}
-
-func {{ .UserDataCheckFn }}(param int, L *lua.LState) *{{ .StructToGenerate }} {
-	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*{{ .StructToGenerate }}); ok {
-		return v
-	}
-	L.ArgError(1, "{{ .StructToGenerate }} expected")
-	return nil
-}
-`
-
-	execTempl(&g.userDataFunctions, g, templ)
-}
-
-func (g *Generator) generateStructAccessFunction() {
-	templ := `
-func {{ .SourceUserDataAccess }}(L *lua.LState) int {
-	{{- if gt (len .GatherFields) 0 }}
-	p1 := {{ .UserDataCheckFn }}(1, L)
-	{{- end }}
-	p2 := L.CheckString(2)
-
-	switch p2 {
-		{{- range $idx, $field := .GatherFields }}
-	case "{{ $field.LuaName }}":
-		L.Push({{ $field.DataType.ConvertGoTypeToLua (printf "p1.%s" $field.FieldName) }})
-		{{ end -}}
-
-		{{- range $idx, $method := .UserDataMethods }}
-	case "{{ $method.LuaFnName }}":
-		L.Push(L.NewFunction({{ $method.SourceFnName }}))
-		{{ end }}
-
-	default:
-		L.Push(lua.LNil)
-	}
-
-	return 1
-}
-`
-
-	execTempl(&g.userDataFunctions, g, templ)
-}
-
-func (g *Generator) generateStructSetFunction() {
-	templ := `
-func {{ .SourceUserDataSet }}(L *lua.LState) int {
-	{{- if gt (len .GatherFields) 0 }}
-	p1 := {{ .UserDataCheckFn }}(1, L)
-	{{- end }}
-	p2 := L.CheckString(2)
-
-	switch p2 {
-		{{- range $idx, $field := .GatherFields }}
-	case "{{ $field.LuaName }}":
-		{{ $field.DataType.ConvertLuaTypeToGo "ud" (printf "%s(3)" $field.DataType.LuaParamType) 3 }}
-		p1.{{ $field.FieldName }} = {{ $field.DataType.ReferenceOrDereferenceForAssignmentToField }}ud
-		{{ end }}
-
-	default:
-		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
-	}
-
-	return 0
-}
-`
-
-	execTempl(&g.userDataFunctions, g, templ)
-}
-
-func (g *Generator) generateStructMethods() {
-	for _, i := range g.UserDataMethods {
-		generateLuaFunctionWrapper(&g.userDataFunctions, g, i)
-	}
-}
-
-func generateLuaFunctionWrapper(out io.Writer, g *Generator, f functiontype.FunctionType) {
-	type FunctionGenerator struct {
-		*Generator
-		*functiontype.FunctionType
-	}
-
-	templ := `
-func {{ .FunctionType.SourceFnName }}(L *lua.LState) int {
-	{{ if .FunctionType.Receiver -}}
-		r := {{ .Generator.UserDataCheckFn }}(1, L)
-	{{- end }}
-	{{ range $idx, $param := .Params }}
-		var p{{ $idx }} {{ $param.TemplateArg }}
-	{{ end }}
-	{{ range $idx, $param := .Params }}
-		{
-			{{ $param.ConvertLuaTypeToGo "ud" (printf "%s(%d)" $param.LuaParamType $param.ParamNum) $param.ParamNum }}
-			p{{ $idx }} = {{ $param.ReferenceOrDereferenceForAssignmentToField }}ud
-		}
-	{{ end }}
-	{{ .FunctionType.GenerateReturnValues "r" }} {{ if .FunctionType.Receiver -}}r.{{ end }}{{ .FunctionType.ActualFnName  }}({{ .FunctionType.GenerateParamValues "p" }})
-
-	{{ range $idx, $ret := .Ret -}}
-		{{- if $ret.IsError -}}
-			if r{{ $idx }} != nil {
-				L.Error(lua.LString(r{{ $idx }}.Error()), 1)
-			}
-		{{- end -}}
-	{{- end }}
-
-	{{ range $idx, $ret := .Ret -}}
-		{{- if not $ret.IsError -}}
-			{{ $name := printf "r%d" $idx }}
-			L.Push({{$ret.ConvertGoTypeToLua $name}})
-		{{- end -}}
-	{{- end }}
-
-	return {{ .FunctionType.NumReturns }}
-}
-`
-
-	execTempl(out, FunctionGenerator{g, &f}, templ)
-}
-
-func execTempl(out io.Writer, data any, templ string) {
-	t := template.Must(template.New("").Parse(templ))
-	err := t.Execute(out, data)
-
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (g *Generator) gatherFunctionsToGenerate() []functiontype.FunctionType {
-	if g.structToGenerate != "" {
+func (g *StructGenerator) gatherFunctionsToGenerate() []functiontype.FunctionType {
+	if g.IsGeneratingStruct() {
 		return g.gatherConstructors()
 	}
 
 	return g.gatherAllFunctions()
 }
 
-func (g *Generator) hasFilters() bool {
+func (g *StructGenerator) hasFilters() bool {
 	return len(g.includeFunctions) > 0 || len(g.excludeFunctions) > 0
 }
 
-func (g *Generator) checkInclude(str string) bool {
+func (g *StructGenerator) checkInclude(str string) bool {
 	if len(g.includeFunctions) > 0 {
 		return slices.Contains(g.includeFunctions, str)
 	}
@@ -541,7 +378,7 @@ func (g *Generator) checkInclude(str string) bool {
 	return true
 }
 
-func (g *Generator) gatherConstructors() []functiontype.FunctionType {
+func (g *StructGenerator) gatherConstructors() []functiontype.FunctionType {
 	ret := make([]functiontype.FunctionType, 0)
 	underylingStructType := g.structObject.Type().Underlying()
 	constructorPrefix := "New" + g.structToGenerate
@@ -586,7 +423,7 @@ func (g *Generator) gatherConstructors() []functiontype.FunctionType {
 	return ret
 }
 
-func (g *Generator) gatherAllFunctions() []functiontype.FunctionType {
+func (g *StructGenerator) gatherAllFunctions() []functiontype.FunctionType {
 	ret := make([]functiontype.FunctionType, 0)
 
 	for _, syn := range g.packageSource.Syntax {
@@ -612,8 +449,8 @@ func (g *Generator) gatherAllFunctions() []functiontype.FunctionType {
 	return ret
 }
 
-func (g *Generator) gatherReceivers() []functiontype.FunctionType {
-	if g.structToGenerate == "" {
+func (g *StructGenerator) gatherReceivers() []functiontype.FunctionType {
+	if !g.IsGeneratingStruct() {
 		return nil
 	}
 
@@ -654,7 +491,11 @@ func (g *Generator) gatherReceivers() []functiontype.FunctionType {
 	return ret
 }
 
-func (g *Generator) GatherFields() []structfield.StructField {
+func (g *StructGenerator) gatherFields() []structfield.StructField {
+	if !g.IsGeneratingStruct() {
+		return nil
+	}
+
 	ret := make([]structfield.StructField, 0)
 	str := g.structObject.Type().Underlying().(*types.Struct)
 

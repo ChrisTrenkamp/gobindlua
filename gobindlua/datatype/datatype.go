@@ -7,6 +7,7 @@ import (
 	"go/types"
 	"text/template"
 
+	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -18,6 +19,10 @@ type DataType struct {
 
 func CreateDataTypeFromExpr(expr ast.Expr, packageSource *packages.Package) DataType {
 	return CreateDataTypeFrom(packageSource.TypesInfo.Types[expr].Type, packageSource)
+}
+
+func (d *DataType) CreateDataTypeFrom(t types.Type) DataType {
+	return CreateDataTypeFrom(t, d.packageSource)
 }
 
 func CreateDataTypeFrom(t types.Type, packageSource *packages.Package) DataType {
@@ -646,6 +651,55 @@ func (d *DataType) LuaParamType() string {
 		return "L.CheckAny"
 	case *types.Struct, *types.Interface:
 		return "L.CheckUserData"
+	}
+
+	return "UNSUPPORTED_TYPE"
+}
+
+func (d *DataType) LuaType(isFunctionReturn bool) string {
+	switch t := d.Type.Underlying().(type) {
+	case *types.Basic:
+		switch d.ActualGoType() {
+		case "bool":
+			return "boolean"
+		case "string":
+			return "string"
+		case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "byte", "uint16", "uint32", "uint64", "float32", "float64":
+			return "number"
+		}
+	case *types.Slice:
+		elem := d.CreateDataTypeFrom(t.Elem())
+
+		/*
+			TODO: https://github.com/LuaLS/lua-language-server/issues/1861
+			Generic classes are not supported by LuaLS.  For now, just declare gbl_array's and gbl_map's as arrays/dictionaries.
+			The problem with this approach is the language server and the actual implementation will start differing when you start
+			passing gbl_array's and gbl_map's into non-gobindlua functions.  If it proves to be a big problem, we could change gobindlua
+			to directly convert all Go slices and maps into tables everywhere.
+			if isFunctionReturn {
+				return fmt.Sprintf("%s<%s>", gobindlua.ARRAY_METATABLE_NAME, elem.LuaType(isFunctionReturn))
+			} else {
+				return fmt.Sprintf("(%[1]s<%[2]s> | %[2]s[])", gobindlua.ARRAY_METATABLE_NAME, elem.LuaType(isFunctionReturn))
+			}
+		*/
+		return fmt.Sprintf("%s[]", elem.LuaType(isFunctionReturn))
+	case *types.Map:
+		key := d.CreateDataTypeFrom(t.Key())
+		val := d.CreateDataTypeFrom(t.Elem())
+
+		/*
+			TODO: https://github.com/LuaLS/lua-language-server/issues/1861
+			if isFunctionReturn {
+				return fmt.Sprintf("%s<%s,%s>", gobindlua.MAP_METATABLE_NAME, key.LuaType(isFunctionReturn), val.LuaType(isFunctionReturn))
+			} else {
+				return fmt.Sprintf("(%[1]s<%[2]s,%[3]s> | table<%[2]s,%[2]s>)", gobindlua.MAP_METATABLE_NAME, key.LuaType(isFunctionReturn), val.LuaType(isFunctionReturn))
+			}
+		*/
+		return fmt.Sprintf("table<%s,%s>", key.LuaType(isFunctionReturn), val.LuaType(isFunctionReturn))
+	case *types.Struct:
+		return gobindluautil.StructFieldMetadataName(d.declaredGoType())
+	case *types.Interface:
+		return gobindluautil.StructOrInterfaceMetadataName(d.declaredGoType())
 	}
 
 	return "UNSUPPORTED_TYPE"

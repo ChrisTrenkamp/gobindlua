@@ -1,11 +1,15 @@
 package functiontype
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
+	"io"
 	"strings"
+	"text/template"
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
+	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/param"
 	"golang.org/x/tools/go/packages"
 )
@@ -38,17 +42,20 @@ func CreateFunction(fn *ast.FuncDecl, receiver bool, luaName, sourceCodeName str
 					param := param.Param{
 						IsEllipses: isEllipses,
 						ParamNum:   paramNum,
+						LuaName:    "",
 						DataType:   typ,
 					}
 					params = append(params, param)
 					paramNum++
 				} else {
-					for range i.Names {
+					for _, name := range i.Names {
 						typ := datatype.CreateDataTypeFromExpr(i.Type, packageSource)
 						_, isEllipses := i.Type.(*ast.Ellipsis)
+						luaName := gobindluautil.SnakeCase(name.Name)
 						param := param.Param{
 							IsEllipses: isEllipses,
 							ParamNum:   paramNum,
+							LuaName:    luaName,
 							DataType:   typ,
 						}
 						params = append(params, param)
@@ -119,4 +126,52 @@ func (f *FunctionType) GenerateParamValues(prefix string) string {
 	}
 
 	return strings.Join(ret, ",")
+}
+
+func (f *FunctionType) GenerateLuaFunctionParamRetDefinitions() string {
+	out := bytes.Buffer{}
+
+	templ := `
+{{ range $idx,$param := .Params -}}
+{{ if $param.IsEllipses -}}
+---@param ... {{ $param.LuaType false }}
+{{ else -}}
+{{ if ne $param.LuaName "" -}}
+---@param {{ $param.LuaName }} {{ $param.DataType.LuaType false }}
+{{ end -}}
+{{- end -}}
+{{- end -}}
+{{- range $idx,$ret := .Ret -}}
+{{- if not $ret.IsError -}}
+---@return {{ $ret.LuaType true }}
+{{ end -}}
+{{- end -}}
+`
+
+	execTempl(&out, f, templ)
+
+	return out.String()
+}
+
+func (f *FunctionType) GenerateLuaFunctionParamStubs() string {
+	ret := make([]string, 0)
+
+	for _, p := range f.Params {
+		if p.IsEllipses {
+			ret = append(ret, "...")
+		} else {
+			ret = append(ret, p.LuaName)
+		}
+	}
+
+	return strings.Join(ret, ", ")
+}
+
+func execTempl(out io.Writer, data any, templ string) {
+	t := template.Must(template.New("").Parse(templ))
+	err := t.Execute(out, data)
+
+	if err != nil {
+		panic(err)
+	}
 }

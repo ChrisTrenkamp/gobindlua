@@ -13,7 +13,7 @@ import (
 // The version is left out of these examples for testing purposes.
 // If the go:generate directive is placed behind a struct declaration, gobindlua will
 // automatically generate the bindings for that struct.  Otherwise, you will have
-// to pass in a -s option.
+// to pass in a -struct option.
 
 // The -x option is used to exclude functions and methods.  You can also use the -i
 // option to selectively include which functions and methods you want.
