@@ -1,6 +1,6 @@
-# Generate struct bindings for GopherLua
+# Generate bindings for GopherLua
 
-`gobindlua` generates [GopherLua](https://github.com/yuin/gopher-lua) bindings for your structs.
+`gobindlua` generates [GopherLua](https://github.com/yuin/gopher-lua) bindings for structs and package functions.
 
 `gobindlua` is designed to be used with `go:generate`.  For example:
 
