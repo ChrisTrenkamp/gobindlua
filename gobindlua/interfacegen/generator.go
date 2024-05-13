@@ -1,4 +1,4 @@
-package main
+package interfacegen
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"go/types"
 	"io"
 	"strconv"
+	"text/template"
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/functiontype"
@@ -142,4 +143,13 @@ return {{ $gen.InterfaceToGenerate }}
 `
 
 	execTempl(w, g, templ)
+}
+
+func execTempl(out io.Writer, data any, templ string) {
+	t := template.Must(template.New("").Parse(templ))
+	err := t.Execute(out, data)
+
+	if err != nil {
+		panic(err)
+	}
 }

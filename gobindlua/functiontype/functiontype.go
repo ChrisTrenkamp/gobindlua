@@ -100,6 +100,50 @@ func (f *FunctionType) NumReturns() int {
 	return ret
 }
 
+func (f *FunctionType) GenerateLuaFunctionWrapper(out io.Writer, userDataCheckFnName string) {
+	type FunctionGenerator struct {
+		UserDataCheckFn string
+		*FunctionType
+	}
+
+	templ := `
+func {{ .FunctionType.SourceFnName }}(L *lua.LState) int {
+	{{ if .FunctionType.Receiver -}}
+		r := {{ .UserDataCheckFn }}(1, L)
+	{{- end }}
+	{{ range $idx, $param := .Params }}
+		var p{{ $idx }} {{ $param.TemplateArg }}
+	{{ end }}
+	{{ range $idx, $param := .Params }}
+		{
+			{{ $param.ConvertLuaTypeToGo "ud" (printf "%s(%d)" $param.LuaParamType $param.ParamNum) $param.ParamNum }}
+			p{{ $idx }} = {{ $param.ReferenceOrDereferenceForAssignmentToField }}ud
+		}
+	{{ end }}
+	{{ .FunctionType.GenerateReturnValues "r" }} {{ if .FunctionType.Receiver -}}r.{{ end }}{{ .FunctionType.ActualFnName  }}({{ .FunctionType.GenerateParamValues "p" }})
+
+	{{ range $idx, $ret := .Ret -}}
+		{{- if $ret.IsError -}}
+			if r{{ $idx }} != nil {
+				L.Error(lua.LString(r{{ $idx }}.Error()), 1)
+			}
+		{{- end -}}
+	{{- end }}
+
+	{{ range $idx, $ret := .Ret -}}
+		{{- if not $ret.IsError -}}
+			{{ $name := printf "r%d" $idx }}
+			L.Push({{$ret.ConvertGoTypeToLua $name}})
+		{{- end -}}
+	{{- end }}
+
+	return {{ .FunctionType.NumReturns }}
+}
+`
+
+	execTempl(out, FunctionGenerator{userDataCheckFnName, f}, templ)
+}
+
 func (f *FunctionType) GenerateReturnValues(prefix string) string {
 	if len(f.Ret) == 0 {
 		return ""

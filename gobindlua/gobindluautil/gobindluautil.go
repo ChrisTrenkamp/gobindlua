@@ -2,6 +2,7 @@ package gobindluautil
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/gobeam/stringy"
 	"golang.org/x/tools/go/packages"
@@ -38,4 +39,20 @@ func LoadSourcePackage(workingDir string) (*packages.Package, error) {
 	}
 
 	return nil, fmt.Errorf("packages.Load returned more than one package")
+}
+
+func HasFilters(includeFunctions, excludeFunctions []string) bool {
+	return len(includeFunctions) > 0 || len(excludeFunctions) > 0
+}
+
+func CheckInclude(str string, includeFunctions, excludeFunctions []string) bool {
+	if len(includeFunctions) > 0 {
+		return slices.Contains(includeFunctions, str)
+	}
+
+	if len(excludeFunctions) > 0 {
+		return !slices.Contains(excludeFunctions, str)
+	}
+
+	return true
 }
