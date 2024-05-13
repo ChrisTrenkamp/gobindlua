@@ -29,6 +29,26 @@ local my_struct = some_struct.new({"foo", "bar", "eggs", "ham"})
 print(my_struct:join()) --[[ foo, bar, eggs, ham ]]
 ```
 
+It will also generate [LuaLS](https://github.com/LuaLS/lua-language-server) definitions under `lua_SomeStruct_definitions.go`:
+
+```lua
+---@meta some_struct
+
+local some_struct = {}
+
+---@return some_struct_fields
+function some_struct.new() end
+
+---@class some_struct_fields
+---@field public my_string string[]
+local my_struct = {}
+
+---@return string
+function some_struct_fields:join() end
+
+return some_struct
+```
+
 ## Tutorials
 
 See [the docs](doc) for instructions on how to use `gobindlua`.
