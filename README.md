@@ -61,6 +61,10 @@ When making changes to `gobindlua`, you can build and test it by running:
 go generate ./... && go test ./...
 ```
 
-## TODO
+## TODO for interfaces
 
-* Interfaces implementations have to be declared excplicitly with the -im parameter.  This can get tedious.  Investigate a way to automatically detect if a struct implements an interface and have the class extend them in the Lua definitions.  Or at the very least, make a utility program that verifies the declarations are correct, or are missing entries.
+Interface implementations have to be declared excplicitly with the -im parameter.  This can get tedious to maintain.  These -im parameters should be removed in favor of the following:
+
+* `gobindlua` should read a `gobindlua-conf.json` file at the root of the project.  This file defines the Go modules that have `gobindlua` bindings.  `gobindlua` should load each of these packages and gather all of their interface declarations.  
+* When generating a struct or function, and a field/param/return type is an interface, and that interface is within the list of modules and the interface has a `go:generate gobindlua` directive, make the Lua definition that interface type.  Otherwise, the Lua definition is the `any` type.
+* When generating a struct, check if it implements any of the interfaces in the list of Go Modules.  If it implements that type, and the interface has a `go:generate gobindlua` directive, have the `@class` Lua definition for that struct extend that interface type.
