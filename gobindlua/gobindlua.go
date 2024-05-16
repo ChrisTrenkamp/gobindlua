@@ -61,7 +61,7 @@ func determineFromGoLine(structToGenerate, packageToGenerate, interfaceToGenerat
 
 		splLine = bytes.TrimSpace(splLine)
 
-		if len(splLine) == 0 || bytes.HasPrefix(splLine, []byte("//")) {
+		if bytes.HasPrefix(splLine, []byte("//go:generate")) {
 			continue
 		}
 
@@ -113,14 +113,12 @@ func numNotEmpty(str ...*string) int {
 func main() {
 	includeFunctions := make(flagArray, 0)
 	excludeFunctions := make(flagArray, 0)
-	implementsDeclarations := make(flagArray, 0)
 	workingDir := flag.String("d", "", "The Go source directory to generate the bindings from. Uses the current working directory if empty.")
 	structToGenerate := flag.String("struct", "", "Generate GopherLua bindings and Lua definitions for the given struct.")
 	packageToGenerate := flag.String("package", "", "Generate GopherLua bindings and Lua definitions for the given package.")
 	interfaceToGenerate := flag.String("interface", "", "Generate Lua definitions for the given interface.")
 	flag.Var(&includeFunctions, "i", "Only include the given function or method names.")
 	flag.Var(&excludeFunctions, "x", "Exclude the given function or method names.")
-	flag.Var(&implementsDeclarations, "im", "Declares the given struct implements an interface.")
 
 	flag.Parse()
 
@@ -150,6 +148,8 @@ func main() {
 		*workingDir = wd
 	}
 
+	dependantModules, err := findGobindLuaConf(*workingDir)
+
 	outFile := ""
 
 	if *structToGenerate != "" {
@@ -164,29 +164,28 @@ func main() {
 
 	var goBytes []byte
 	var luaDefBytes []byte
-	var err error
 
 	if *structToGenerate != "" {
 		gen := structgen.NewStructGenerator(
 			*structToGenerate,
 			*workingDir,
 			basePathToOutput+".go",
+			dependantModules,
 			includeFunctions,
 			excludeFunctions,
-			implementsDeclarations,
 		)
 		goBytes, luaDefBytes, err = gen.GenerateSourceCode()
 	} else if *packageToGenerate != "" {
 		gen := packagegen.NewPackageGenerator(
 			*packageToGenerate,
 			*workingDir,
-			basePathToOutput+".go",
+			basePathToOutput+".go", dependantModules,
 			includeFunctions,
 			excludeFunctions,
 		)
 		goBytes, luaDefBytes, err = gen.GenerateSourceCode()
 	} else if *interfaceToGenerate != "" {
-		gen := interfacegen.NewInterfaceGenerator(*interfaceToGenerate, *workingDir)
+		gen := interfacegen.NewInterfaceGenerator(*interfaceToGenerate, *workingDir, dependantModules)
 		luaDefBytes, err = gen.GenerateSourceCode()
 	}
 
@@ -207,4 +206,34 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func findGobindLuaConf(wd string) ([]string, error) {
+	for {
+		modFile := filepath.Join(wd, "go.mod")
+		_, err := os.Stat(modFile)
+
+		if os.IsNotExist(err) {
+			wd = filepath.Dir(wd)
+			continue
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		break
+	}
+
+	confFile := filepath.Join(wd, "gobindlua-conf.txt")
+	fileBytes, err := os.ReadFile(confFile)
+
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+
+	fileString := strings.Replace(string(fileBytes), "\r", "", -1)
+	fileString = strings.TrimSpace(fileString)
+	ret := strings.Split(fileString, "\n")
+	return ret, err
 }

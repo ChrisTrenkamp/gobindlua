@@ -1,8 +1,7 @@
 // gobindlua can be configured to only generate functions.
 // If the go:generate directive is placed behind a package
 // declaration, gobindlua will automatically generate the
-// functions for that package.  Otherwise, you will need to
-// pass in the -package option.
+// functions for that package.
 
 // The -i option is used to explicitly declare which functions
 // or methods you want to include in the bindings.

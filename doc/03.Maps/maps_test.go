@@ -41,7 +41,7 @@ for k,v in pairs(db_table) do
 end
 `
 
-func ExampleUserDatabase() {
+func Example() {
 	L := lua.NewState()
 	defer L.Close()
 

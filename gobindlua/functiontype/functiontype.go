@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
+	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/param"
 	"golang.org/x/tools/go/packages"
@@ -23,7 +24,7 @@ type FunctionType struct {
 	Ret          []datatype.DataType
 }
 
-func CreateFunction(fn *ast.FuncDecl, receiver bool, luaName, sourceCodeName string, packageSource *packages.Package) FunctionType {
+func CreateFunction(fn *ast.FuncDecl, receiver bool, luaName, sourceCodeName string, packageSource *packages.Package, allDeclaredInterfaces []declaredinterface.DeclaredInterface) FunctionType {
 	params := make([]param.Param, 0)
 	ret := make([]datatype.DataType, 0)
 
@@ -37,7 +38,7 @@ func CreateFunction(fn *ast.FuncDecl, receiver bool, luaName, sourceCodeName str
 
 			for _, i := range fn.Type.Params.List {
 				if len(i.Names) == 0 {
-					typ := datatype.CreateDataTypeFromExpr(i.Type, packageSource)
+					typ := datatype.CreateDataTypeFromExpr(i.Type, packageSource, allDeclaredInterfaces)
 					_, isEllipses := i.Type.(*ast.Ellipsis)
 					param := param.Param{
 						IsEllipses: isEllipses,
@@ -49,7 +50,7 @@ func CreateFunction(fn *ast.FuncDecl, receiver bool, luaName, sourceCodeName str
 					paramNum++
 				} else {
 					for _, name := range i.Names {
-						typ := datatype.CreateDataTypeFromExpr(i.Type, packageSource)
+						typ := datatype.CreateDataTypeFromExpr(i.Type, packageSource, allDeclaredInterfaces)
 						_, isEllipses := i.Type.(*ast.Ellipsis)
 						luaName := gobindluautil.SnakeCase(name.Name)
 						param := param.Param{
@@ -68,10 +69,10 @@ func CreateFunction(fn *ast.FuncDecl, receiver bool, luaName, sourceCodeName str
 		if fn.Type.Results != nil {
 			for _, i := range fn.Type.Results.List {
 				if len(i.Names) == 0 {
-					ret = append(ret, datatype.CreateDataTypeFromExpr(i.Type, packageSource))
+					ret = append(ret, datatype.CreateDataTypeFromExpr(i.Type, packageSource, allDeclaredInterfaces))
 				} else {
 					for range i.Names {
-						ret = append(ret, datatype.CreateDataTypeFromExpr(i.Type, packageSource))
+						ret = append(ret, datatype.CreateDataTypeFromExpr(i.Type, packageSource, allDeclaredInterfaces))
 					}
 				}
 			}

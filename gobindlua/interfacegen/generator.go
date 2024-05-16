@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
+	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/functiontype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/param"
@@ -18,17 +19,20 @@ import (
 type InterfaceGenerator struct {
 	interfaceToGenerate string
 	workingDir          string
+	dependantModules    []string
 
-	packageSource   *packages.Package
-	interfaceObject types.Object
+	packageSource         *packages.Package
+	allDeclaredInterfaces []declaredinterface.DeclaredInterface
+	interfaceObject       types.Object
 
 	InterfaceMethods []functiontype.FunctionType
 }
 
-func NewInterfaceGenerator(interfaceToGenerate, workingDir string) InterfaceGenerator {
+func NewInterfaceGenerator(interfaceToGenerate, workingDir string, dependantModules []string) InterfaceGenerator {
 	return InterfaceGenerator{
 		interfaceToGenerate: interfaceToGenerate,
 		workingDir:          workingDir,
+		dependantModules:    dependantModules,
 	}
 }
 
@@ -46,7 +50,7 @@ func (g *InterfaceGenerator) GenerateSourceCode() ([]byte, error) {
 
 func (g *InterfaceGenerator) loadSourcePackage() error {
 	var err error
-	g.packageSource, err = gobindluautil.LoadSourcePackage(g.workingDir)
+	g.packageSource, g.allDeclaredInterfaces, err = gobindluautil.LoadSourcePackage(g.workingDir, g.dependantModules)
 
 	if err != nil {
 		return err
@@ -92,7 +96,7 @@ func (g *InterfaceGenerator) createFuncDecl(fn *types.Func) functiontype.Functio
 
 	for i := 0; i < typ.Params().Len(); i++ {
 		p := typ.Params().At(i)
-		typ := datatype.CreateDataTypeFrom(p.Type(), g.packageSource)
+		typ := datatype.CreateDataTypeFrom(p.Type(), g.packageSource, g.allDeclaredInterfaces)
 		luaName := gobindluautil.SnakeCase(p.Name())
 
 		if luaName == "" {
@@ -111,7 +115,7 @@ func (g *InterfaceGenerator) createFuncDecl(fn *types.Func) functiontype.Functio
 
 	for i := 0; i < typ.Results().Len(); i++ {
 		r := typ.Results().At(i)
-		ret = append(ret, datatype.CreateDataTypeFrom(r.Type(), g.packageSource))
+		ret = append(ret, datatype.CreateDataTypeFrom(r.Type(), g.packageSource, g.allDeclaredInterfaces))
 	}
 
 	return functiontype.FunctionType{

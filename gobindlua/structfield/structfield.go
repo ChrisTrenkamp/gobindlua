@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
+	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
 	"golang.org/x/tools/go/packages"
 )
@@ -16,9 +17,9 @@ type StructField struct {
 	datatype.DataType
 }
 
-func CreateStructField(field *types.Var, luaName string, packageSource *packages.Package) StructField {
+func CreateStructField(field *types.Var, luaName string, packageSource *packages.Package, allDeclaredInterfaces []declaredinterface.DeclaredInterface) StructField {
 	name := field.Name()
-	typ := datatype.CreateDataTypeFrom(field.Type(), packageSource)
+	typ := datatype.CreateDataTypeFrom(field.Type(), packageSource, allDeclaredInterfaces)
 
 	return StructField{
 		FieldName: name,

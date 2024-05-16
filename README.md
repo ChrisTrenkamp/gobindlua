@@ -1,11 +1,19 @@
 # Generate bindings for GopherLua
 
-`gobindlua` generates [GopherLua](https://github.com/yuin/gopher-lua) bindings for structs and package functions.
+`gobindlua` generates [GopherLua](https://github.com/yuin/gopher-lua) bindings and [LuaLS](https://github.com/LuaLS/lua-language-server) definitions.  It can generate bindings and definitions for structs, interfaces, and package functions.
 
-`gobindlua` is designed to be used with `go:generate`.  For example:
+## Example
+
+`gobindlua` is designed to be used with `go:generate`:
 
 ```go
 // Replace *version* with a gobindlua version.
+
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua@*version*
+type Joiner interface {
+    Join() string
+}
+
 //go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua@*version*
 type SomeStruct struct {
     SomeStrings []string
@@ -29,9 +37,10 @@ local my_struct = some_struct.new({"foo", "bar", "eggs", "ham"})
 print(my_struct:join()) --[[ foo, bar, eggs, ham ]]
 ```
 
-It will also generate [LuaLS](https://github.com/LuaLS/lua-language-server) definitions under `lua_SomeStruct_definitions.go`:
+It will also generate [LuaLS](https://github.com/LuaLS/lua-language-server) definitions for the struct and interface:
 
 ```lua
+---lua_SomeStruct_definitions.go
 ---@meta some_struct
 
 local some_struct = {}
@@ -39,7 +48,7 @@ local some_struct = {}
 ---@return some_struct_fields
 function some_struct.new() end
 
----@class some_struct_fields
+---@class some_struct_fields : joiner
 ---@field public my_string string[]
 local my_struct = {}
 
@@ -48,6 +57,23 @@ function some_struct_fields:join() end
 
 return some_struct
 ```
+
+```lua
+---lua_Joiner_definitions.go
+---@meta joiner
+
+---@class joiner
+local joiner = {}
+
+---@return string
+function joiner.join() end
+
+return joiner
+```
+
+## Enable interface discovery
+
+If you want to generate interface definitions, create a `gobind-lua.conf` file in the root of your Go project (next to the `go.mod` file), with the list of Go modules that have generated `gobindlua` source files (including your own project).  Any interface field listed in the `gobind-lua.conf` and has a `//go:generate` directive will be picked up and generated as its own type in the Lua definitions.  Otherwise, it will be generated as an `any` type.
 
 ## Tutorials
 
@@ -60,11 +86,3 @@ When making changes to `gobindlua`, you can build and test it by running:
 ```
 go generate ./... && go test ./...
 ```
-
-## TODO for interfaces
-
-Interface implementations have to be declared excplicitly with the -im parameter.  This can get tedious to maintain.  These -im parameters should be removed in favor of the following:
-
-* `gobindlua` should read a `gobindlua-conf.json` file at the root of the project.  This file defines the Go modules that have `gobindlua` bindings.  `gobindlua` should load each of these packages and gather all of their interface declarations.  
-* When generating a struct or function, and a field/param/return type is an interface, and that interface is within the list of modules and the interface has a `go:generate gobindlua` directive, make the Lua definition that interface type.  Otherwise, the Lua definition is the `any` type.
-* When generating a struct, check if it implements any of the interfaces in the list of Go Modules.  If it implements that type, and the interface has a `go:generate gobindlua` directive, have the `@class` Lua definition for that struct extend that interface type.

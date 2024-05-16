@@ -46,7 +46,7 @@ print("Identity matrix:")
 print(identity_matrix:string())
 `
 
-func ExampleVector() {
+func Example() {
 	L := lua.NewState()
 	defer L.Close()
 

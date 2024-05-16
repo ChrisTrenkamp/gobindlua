@@ -32,7 +32,7 @@ print("DivideMyInt error: " .. err)
 print("ExcludedMethod has been excluded: " .. tostring(data.excluded_method == nil))
 `
 
-func ExamplePrimitiveStruct() {
+func Example() {
 	L := lua.NewState()
 	defer L.Close()
 

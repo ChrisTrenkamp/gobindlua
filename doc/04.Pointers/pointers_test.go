@@ -45,7 +45,7 @@ s.f = {
 }
 `
 
-func ExampleSomeStruct() {
+func Example() {
 	L := lua.NewState()
 	defer L.Close()
 

@@ -12,24 +12,27 @@ import (
 	"unicode"
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
+	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/functiontype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gblimports"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
+	"github.com/ChrisTrenkamp/gobindlua/gobindlua/param"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/structfield"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
 )
 
 type StructGenerator struct {
-	structToGenerate       string
-	wd                     string
-	pathToOutput           string
-	includeFunctions       []string
-	excludeFunctions       []string
-	implementsDeclarations []string
+	structToGenerate string
+	wd               string
+	pathToOutput     string
+	dependantModules []string
+	includeFunctions []string
+	excludeFunctions []string
 
-	packageSource *packages.Package
-	structObject  types.Object
+	packageSource         *packages.Package
+	allDeclaredInterfaces []declaredinterface.DeclaredInterface
+	structObject          types.Object
 
 	StaticFunctions []functiontype.FunctionType
 	UserDataMethods []functiontype.FunctionType
@@ -37,14 +40,14 @@ type StructGenerator struct {
 	imports         gblimports.Imports
 }
 
-func NewStructGenerator(structToGenerate, wd, pathToOutput string, includeFunctions, excludeFunctions, implementsDeclarations []string) *StructGenerator {
+func NewStructGenerator(structToGenerate, wd, pathToOutput string, dependantModules []string, includeFunctions, excludeFunctions []string) *StructGenerator {
 	return &StructGenerator{
-		structToGenerate:       structToGenerate,
-		wd:                     wd,
-		pathToOutput:           pathToOutput,
-		includeFunctions:       includeFunctions,
-		excludeFunctions:       excludeFunctions,
-		implementsDeclarations: implementsDeclarations,
+		structToGenerate: structToGenerate,
+		wd:               wd,
+		pathToOutput:     pathToOutput,
+		dependantModules: dependantModules,
+		includeFunctions: includeFunctions,
+		excludeFunctions: excludeFunctions,
 	}
 }
 
@@ -72,7 +75,7 @@ func (g *StructGenerator) GenerateSourceCode() ([]byte, []byte, error) {
 
 func (g *StructGenerator) loadSourcePackage() error {
 	var err error
-	g.packageSource, err = gobindluautil.LoadSourcePackage(g.wd)
+	g.packageSource, g.allDeclaredInterfaces, err = gobindluautil.LoadSourcePackage(g.wd, g.dependantModules)
 
 	if err != nil {
 		return err
@@ -128,7 +131,7 @@ func (g *StructGenerator) gatherConstructors() []functiontype.FunctionType {
 		for _, dec := range syn.Decls {
 			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Type.Results != nil {
 				for _, retType := range fn.Type.Results.List {
-					retType := datatype.CreateDataTypeFromExpr(retType.Type, g.packageSource)
+					retType := datatype.CreateDataTypeFromExpr(retType.Type, g.packageSource, g.allDeclaredInterfaces)
 
 					if retType.Type.Underlying() == underylingStructType {
 						fnName := fn.Name.Name
@@ -153,7 +156,7 @@ func (g *StructGenerator) gatherConstructors() []functiontype.FunctionType {
 						}
 
 						sourceCodeName := "luaConstructor" + g.StructToGenerate() + fnName
-						ret = append(ret, functiontype.CreateFunction(fn, false, luaName, sourceCodeName, g.packageSource))
+						ret = append(ret, functiontype.CreateFunction(fn, false, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
 						break
 					}
 				}
@@ -186,12 +189,12 @@ func (g *StructGenerator) gatherReceivers() []functiontype.FunctionType {
 				}
 
 				for _, recType := range fn.Recv.List {
-					recType := datatype.CreateDataTypeFromExpr(recType.Type, g.packageSource)
+					recType := datatype.CreateDataTypeFromExpr(recType.Type, g.packageSource, g.allDeclaredInterfaces)
 
 					if recType.Type.Underlying() == underylingStructType {
 						luaName := gobindluautil.SnakeCase(fnName)
 						sourceCodeName := "luaMethod" + g.StructToGenerate() + fnName
-						ret = append(ret, functiontype.CreateFunction(fn, true, luaName, sourceCodeName, g.packageSource))
+						ret = append(ret, functiontype.CreateFunction(fn, true, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
 						break
 					}
 				}
@@ -212,7 +215,7 @@ func (g *StructGenerator) gatherFields() []structfield.StructField {
 		luaName := structfield.GetLuaNameFromTag(field, tag)
 
 		if luaName != "" {
-			ret = append(ret, structfield.CreateStructField(field, luaName, g.packageSource))
+			ret = append(ret, structfield.CreateStructField(field, luaName, g.packageSource, g.allDeclaredInterfaces))
 		}
 	}
 
@@ -381,17 +384,85 @@ return {{ $gen.StructMetatableIdentifier }}
 }
 
 func (g *StructGenerator) GenerateInterfaceDeclarations() string {
-	if len(g.implementsDeclarations) == 0 {
+	ret := make([]string, 0)
+
+	for _, i := range g.allDeclaredInterfaces {
+		if g.implementsInterface(i.Interface) {
+			ret = append(ret, gobindluautil.StructOrInterfaceMetadataName(i.Name))
+		}
+	}
+
+	if len(ret) == 0 {
 		return ""
 	}
 
-	ret := make([]string, 0)
+	return " : " + strings.Join(ret, ", ")
+}
 
-	for _, i := range g.implementsDeclarations {
-		ret = append(ret, gobindluautil.StructOrInterfaceMetadataName(i))
+func (s *StructGenerator) implementsInterface(iface *types.Interface) bool {
+	numIfaceMethods := iface.NumMethods()
+	matchingMethods := 0
+
+	for i := 0; i < iface.NumMethods(); i++ {
+		ifaceMethod := iface.Method(i)
+		if ifaceMethod.Name() == "LuaMetatableType" {
+			numIfaceMethods--
+			continue
+		}
+
+		ifaceFunc := ifaceMethod.Type().(*types.Signature)
+
+		matches := false
+
+		for _, structMethod := range s.UserDataMethods {
+			if structMethod.ActualFnName == ifaceMethod.Name() {
+				if s.methodParamsMatch(structMethod.Params, ifaceFunc.Params()) &&
+					s.methodReturnsMatch(structMethod.Ret, ifaceFunc.Results()) {
+					matches = true
+				}
+			}
+		}
+
+		if matches {
+			matchingMethods++
+		}
 	}
 
-	return " : " + strings.Join(ret, ", ")
+	return matchingMethods == numIfaceMethods
+}
+
+func (s *StructGenerator) methodParamsMatch(structParams []param.Param, interfaceParams *types.Tuple) bool {
+	if len(structParams) != interfaceParams.Len() {
+		return false
+	}
+
+	for i := 0; i < len(structParams); i++ {
+		sp := structParams[i].Type
+		ip := interfaceParams.At(i).Type()
+
+		if !types.Identical(sp, ip) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (s *StructGenerator) methodReturnsMatch(structRet []datatype.DataType, interfaceRet *types.Tuple) bool {
+	if len(structRet) != interfaceRet.Len() {
+		return false
+	}
+
+	for i := 0; i < len(structRet); i++ {
+		sp := structRet[i].Type
+		ip := interfaceRet.At(i).Type()
+
+		if !types.Identical(sp, ip) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func execTempl(out io.Writer, data any, templ string) {

@@ -9,6 +9,7 @@ import (
 	"text/template"
 	"unicode"
 
+	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/functiontype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gblimports"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
@@ -22,20 +23,23 @@ type PackageGenerator struct {
 	packageToGenerate string
 	wd                string
 	pathToOutput      string
+	dependantModules  []string
 	includeFunctions  []string
 	excludeFunctions  []string
 
-	packageSource *packages.Package
+	packageSource         *packages.Package
+	allDeclaredInterfaces []declaredinterface.DeclaredInterface
 
 	StaticFunctions []functiontype.FunctionType
 	imports         gblimports.Imports
 }
 
-func NewPackageGenerator(packageToGenerate, wd, pathToOutput string, includeFunctions, excludeFunctions []string) *PackageGenerator {
+func NewPackageGenerator(packageToGenerate, wd, pathToOutput string, dependantModules []string, includeFunctions, excludeFunctions []string) *PackageGenerator {
 	return &PackageGenerator{
 		packageToGenerate: packageToGenerate,
 		wd:                wd,
 		pathToOutput:      pathToOutput,
+		dependantModules:  dependantModules,
 		includeFunctions:  includeFunctions,
 		excludeFunctions:  excludeFunctions,
 	}
@@ -58,7 +62,7 @@ func (g *PackageGenerator) GenerateSourceCode() ([]byte, []byte, error) {
 
 func (g *PackageGenerator) loadSourcePackage() error {
 	var err error
-	g.packageSource, err = gobindluautil.LoadSourcePackage(g.wd)
+	g.packageSource, g.allDeclaredInterfaces, err = gobindluautil.LoadSourcePackage(g.wd, g.dependantModules)
 	return err
 }
 
@@ -89,7 +93,7 @@ func (g *PackageGenerator) gatherAllFunctions() []functiontype.FunctionType {
 
 				luaName := gobindluautil.SnakeCase(fnName)
 				sourceCodeName := "luaFunction" + fnName
-				ret = append(ret, functiontype.CreateFunction(fn, false, luaName, sourceCodeName, g.packageSource))
+				ret = append(ret, functiontype.CreateFunction(fn, false, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
 			}
 		}
 	}
