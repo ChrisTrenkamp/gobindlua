@@ -98,6 +98,8 @@ func MapLuaArrayOrTableToGoMap[K comparable, V any](p lua.LValue, mapper func(k,
 		})
 
 		return ret, nil
+	case *lua.LNilType:
+		return nil, nil
 	}
 
 	return nil, fmt.Errorf("expected LuaArray or table")

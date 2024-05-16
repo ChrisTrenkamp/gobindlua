@@ -112,6 +112,8 @@ func MapLuaArrayOrTableToGoSlice[T any](p lua.LValue, mapper func(val lua.LValue
 		}
 
 		return ret, nil
+	case *lua.LNilType:
+		return nil, nil
 	}
 
 	return nil, fmt.Errorf("expected LuaArray or table")
