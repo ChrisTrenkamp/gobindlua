@@ -73,7 +73,7 @@ return joiner
 
 ## Enable interface discovery
 
-If you want to generate interface definitions, create a `gobind-lua.conf` file in the root of your Go project (next to the `go.mod` file), with the list of Go modules that have generated `gobindlua` source files (including your own project).  Any interface field listed in the `gobind-lua.conf` and has a `//go:generate` directive will be picked up and generated as its own type in the Lua definitions.  Otherwise, it will be generated as an `any` type.
+If you want to generate interface definitions, create a `gobindlua-conf.txt` file in the root of your Go project (next to the `go.mod` file), with the list of Go modules that have generated `gobindlua` source files (including your own project).  Any interface field listed in the `gobindlua-conf.txt` and has a `//go:generate` directive will be picked up and generated as its own type in the Lua definitions.  Otherwise, it will be generated as an `any` type.
 
 ## Tutorials
 
