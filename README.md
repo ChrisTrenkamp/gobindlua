@@ -86,3 +86,7 @@ When making changes to `gobindlua`, you can build and test it by running:
 ```
 go generate ./... && go test ./...
 ```
+
+TODO:
+
+* `godoc` comments for structs, fields, and methods should be attached to the lua definitions.
