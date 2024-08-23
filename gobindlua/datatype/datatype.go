@@ -571,6 +571,22 @@ func (d *DataType) Package() string {
 	return ""
 }
 
+func (d *DataType) ActualTemplateArg() string {
+	indir := d.dereference()
+
+	switch t := d.Type.Underlying().(type) {
+	case *types.Slice:
+		sl := CreateDataTypeFrom(t.Elem(), d.packageSource, d.allDeclaredInterfaces)
+		return indir + "[]" + sl.ActualTemplateArg()
+	case *types.Map:
+		k := CreateDataTypeFrom(t.Key(), d.packageSource, d.allDeclaredInterfaces)
+		v := CreateDataTypeFrom(t.Elem(), d.packageSource, d.allDeclaredInterfaces)
+		return indir + "map[" + k.ActualTemplateArg() + "]" + v.ActualTemplateArg()
+	}
+
+	return indir + d.declaredGoType()
+}
+
 func (d *DataType) TemplateArg() string {
 	indir := d.dereference()
 

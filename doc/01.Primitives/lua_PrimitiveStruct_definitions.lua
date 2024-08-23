@@ -12,10 +12,14 @@ function primitive_struct.new() end
 ---@field public my_int64 number
 ---@field public my_float number
 ---@field public my_string string
+---@field public my_specialized_int number
 local primitive_struct_fields = {}
 
 ---@param divisor number
 ---@return number
 function primitive_struct_fields:divide_my_int(divisor) end
+
+---@param i number
+function primitive_struct_fields:set_specialized_int(i) end
 
 return primitive_struct

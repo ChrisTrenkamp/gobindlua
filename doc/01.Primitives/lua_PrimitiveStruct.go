@@ -62,8 +62,14 @@ func luaAccessPrimitiveStruct(L *lua.LState) int {
 	case "my_string":
 		L.Push((lua.LString)(p1.SomeString))
 
+	case "my_specialized_int":
+		L.Push((lua.LNumber)(p1.MySpecializedInt))
+
 	case "divide_my_int":
 		L.Push(L.NewFunction(luaMethodPrimitiveStructDivideMyInt))
+
+	case "set_specialized_int":
+		L.Push(L.NewFunction(luaMethodPrimitiveStructSetSpecializedInt))
 
 	default:
 		L.Push(lua.LNil)
@@ -97,6 +103,10 @@ func luaSetPrimitiveStruct(L *lua.LState) int {
 		ud := string(L.CheckString(3))
 		p1.SomeString = ud
 
+	case "my_specialized_int":
+		ud := SpecializedInt(L.CheckNumber(3))
+		p1.MySpecializedInt = ud
+
 	default:
 		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
 	}
@@ -123,4 +133,19 @@ func luaMethodPrimitiveStructDivideMyInt(L *lua.LState) int {
 	L.Push((lua.LNumber)(r0))
 
 	return 1
+}
+
+func luaMethodPrimitiveStructSetSpecializedInt(L *lua.LState) int {
+	r := luaCheckPrimitiveStruct(1, L)
+
+	var p0 SpecializedInt
+
+	{
+		ud := SpecializedInt(L.CheckNumber(2))
+		p0 = ud
+	}
+
+	r.SetSpecializedInt(p0)
+
+	return 0
 }
