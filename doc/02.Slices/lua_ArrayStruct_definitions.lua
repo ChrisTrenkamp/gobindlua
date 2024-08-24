@@ -14,6 +14,9 @@ local array_struct_fields = {}
 ---@param j number[]
 function array_struct_fields:set_elements(j) end
 
+---@param j number[]
+function array_struct_fields:set_elements_from_subpackage(j) end
+
 ---@return string
 function array_struct_fields:string() end
 

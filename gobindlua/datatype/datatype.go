@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/types"
+	"strings"
 	"text/template"
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
@@ -209,6 +210,10 @@ func (d *DataType) ReferenceOrDereferenceForAssignmentToField() string {
 		luaPointerLevel++
 	}
 
+	if _, ok := d.Type.Underlying().(*types.Array); ok {
+		luaPointerLevel++
+	}
+
 	if luaPointerLevel < goPointerLevel {
 		return "&"
 	}
@@ -336,7 +341,7 @@ func (d *DataType) convertLuaTypeToGoSlice(typ types.Type, variableToCreate stri
 		ParamNum           int
 		TemplateArg        string
 	}{
-		OriginalArrType:    d.ActualTemplateArg(),
+		OriginalArrType:    strings.TrimPrefix(d.ActualTemplateArg(), "*"),
 		VariableToCreate:   variableToCreate,
 		ActualGoType:       elem.ActualGoType(),
 		LuaVariable:        luaVariable,
@@ -360,7 +365,7 @@ if err != nil {
 	L.ArgError({{ .ParamNum }}, err.Error())
 }
 
-{{ .VariableToCreate }} := ({{ .OriginalArrType }})({{ .VariableToCreate }}sl)
+{{ .VariableToCreate }} := (*{{ .OriginalArrType }})({{ .VariableToCreate }}sl)
 `
 	} else {
 		templ = `
@@ -598,6 +603,10 @@ func (d *DataType) Package() string {
 
 func (d *DataType) ActualTemplateArg() string {
 	indir := d.dereference()
+
+	if _, ok := d.Type.(*types.Named); ok && !d.IsError() {
+		return indir + d.declaredGoType()
+	}
 
 	switch t := d.Type.Underlying().(type) {
 	case *types.Array:

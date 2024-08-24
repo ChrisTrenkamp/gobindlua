@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ChrisTrenkamp/gobindlua"
+	slicessubpackage "github.com/ChrisTrenkamp/gobindlua/doc/02.Slices/slices_subpackage"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -40,9 +41,9 @@ func luaConstructorArrayStructNewArrayStruct(L *lua.LState) int {
 			L.ArgError(1, err.Error())
 		}
 
-		ud := ([3]float32)(udsl)
+		ud := (*[3]float32)(udsl)
 
-		p0 = ud
+		p0 = *ud
 	}
 
 	r0 := NewArrayStruct(p0)
@@ -90,6 +91,9 @@ func luaAccessArrayStruct(L *lua.LState) int {
 	case "set_elements":
 		L.Push(L.NewFunction(luaMethodArrayStructSetElements))
 
+	case "set_elements_from_subpackage":
+		L.Push(L.NewFunction(luaMethodArrayStructSetElementsFromSubpackage))
+
 	case "string":
 		L.Push(L.NewFunction(luaMethodArrayStructString))
 
@@ -122,9 +126,9 @@ func luaSetArrayStruct(L *lua.LState) int {
 			L.ArgError(3, err.Error())
 		}
 
-		ud := ([3]float32)(udsl)
+		ud := (*[3]float32)(udsl)
 
-		p1.Elements = ud
+		p1.Elements = *ud
 
 	default:
 		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
@@ -155,12 +159,44 @@ func luaMethodArrayStructSetElements(L *lua.LState) int {
 			L.ArgError(2, err.Error())
 		}
 
-		ud := ([3]float32)(udsl)
+		ud := (*[3]float32)(udsl)
+
+		p0 = *ud
+	}
+
+	r.SetElements(p0)
+
+	return 0
+}
+
+func luaMethodArrayStructSetElementsFromSubpackage(L *lua.LState) int {
+	r := luaCheckArrayStruct(1, L)
+
+	var p0 *slicessubpackage.AnArray
+
+	{
+
+		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(2), func(val0 lua.LValue) float32 {
+
+			v0, ok := val0.(lua.LNumber)
+
+			if !ok {
+				L.ArgError(2, "argument not a float32 instance")
+			}
+
+			return (float32)(v0)
+		})
+
+		if err != nil {
+			L.ArgError(2, err.Error())
+		}
+
+		ud := (*slicessubpackage.AnArray)(udsl)
 
 		p0 = ud
 	}
 
-	r.SetElements(p0)
+	r.SetElementsFromSubpackage(p0)
 
 	return 0
 }

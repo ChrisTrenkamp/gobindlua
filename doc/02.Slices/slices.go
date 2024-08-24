@@ -3,6 +3,8 @@ package slices
 import (
 	"fmt"
 	"strings"
+
+	slicessubpackage "github.com/ChrisTrenkamp/gobindlua/doc/02.Slices/slices_subpackage"
 )
 
 //go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua
@@ -61,6 +63,12 @@ func NewArrayStruct(elems [3]float32) ArrayStruct {
 
 func (s *ArrayStruct) SetElements(j [3]float32) {
 	s.Elements = j
+}
+
+func (s *ArrayStruct) SetElementsFromSubpackage(j *slicessubpackage.AnArray) {
+	s.Elements[0] = j[0]
+	s.Elements[1] = j[1]
+	s.Elements[2] = j[2]
 }
 
 func (s ArrayStruct) String() string {
