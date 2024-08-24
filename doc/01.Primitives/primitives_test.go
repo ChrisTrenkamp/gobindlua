@@ -17,7 +17,6 @@ data.my_int = 42
 data.my_int64 = 0xDEADBEEF
 data.my_float = 3.14
 data.my_string = "all your lua are belong to us"
-data.my_specialized_int = 9001
 
 print("MyBool: " .. tostring(data.my_bool))
 print("MyInt: " .. tostring(data.my_int))
@@ -25,6 +24,8 @@ print("MyInt64: " .. tostring(data.my_int64))
 print("MyFloat: " .. tostring(data.my_float))
 print("MyString: " .. tostring(data.my_string))
 print("WillBeExcluded has been excluded: " .. tostring(data.will_be_excluded == nil))
+
+data:set_specialized_int(9001)
 print("MySpecializedInt: " .. tostring(data.my_specialized_int))
 
 print("DivideMyInt: " .. tostring(data:divide_my_int(2)))
@@ -60,7 +61,7 @@ func Example() {
 	// WillBeExcluded has been excluded: true
 	// MySpecializedInt: 9001
 	// DivideMyInt: 21
-	// DivideMyInt error: <string>:20: divide by zero error
+	// DivideMyInt error: <string>:21: divide by zero error
 	// ExcludedMethod has been excluded: true
 	//{
 	//	"MyBool": true,

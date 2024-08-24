@@ -10,21 +10,12 @@ type Vector struct {
 	Elements []float64
 }
 
-//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua
-type Matrix struct {
-	Elements [][]float64
-}
-
 func NewVectorFrom(elems []float64) Vector {
 	return Vector{Elements: elems}
 }
 
 func NewVectorVariadic(elems ...float64) Vector {
 	return Vector{Elements: elems}
-}
-
-func NewMatrixFrom(elems [][]float64) Matrix {
-	return Matrix{Elements: elems}
 }
 
 func (v Vector) InnerProduct(o Vector) (float64, error) {
@@ -55,6 +46,34 @@ func (v Vector) OuterProduct(o Vector) (Matrix, error) {
 	}
 
 	return Matrix{Elements: ret}, nil
+}
+
+const ArrSize = 3
+
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua
+type ArrayStruct struct {
+	Elements [ArrSize]float32
+}
+
+func NewArrayStruct(elems [3]float32) ArrayStruct {
+	return ArrayStruct{Elements: elems}
+}
+
+func (s *ArrayStruct) SetElements(j [3]float32) {
+	s.Elements = j
+}
+
+func (s ArrayStruct) String() string {
+	return fmt.Sprintf("{%f, %f, %f}", s.Elements[0], s.Elements[1], s.Elements[2])
+}
+
+//go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua
+type Matrix struct {
+	Elements [][]float64
+}
+
+func NewMatrixFrom(elems [][]float64) Matrix {
+	return Matrix{Elements: elems}
 }
 
 func (m Matrix) String() string {

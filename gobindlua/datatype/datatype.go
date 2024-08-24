@@ -55,10 +55,12 @@ func convertGoTypeToLua(variable string, variableType *DataType, level int) stri
 	switch t := variableType.Type.Underlying().(type) {
 	case *types.Basic:
 		return fmt.Sprintf(`(%s)(%s%s)`, variableType.luaType(), variableType.dereference(), variable)
+	case *types.Array:
+		return convertGoTypeToLuaSlice(t.Elem(), variableType, variable, level)
 	case *types.Slice:
-		return convertGoTypeToLuaSlice(t, variableType, variable, level)
+		return convertGoTypeToLuaSlice(t.Elem(), variableType, variable, level)
 	case *types.Map:
-		return convertGoTypeToLuaMap(t, variableType, variable, level)
+		return convertGoTypeToLuaMap(t.Key(), t.Elem(), variableType, variable, level)
 	case *types.Interface:
 		return fmt.Sprintf("gobindlua.NewUserData(%s, L)", variable)
 	}
@@ -66,8 +68,8 @@ func convertGoTypeToLua(variable string, variableType *DataType, level int) stri
 	return fmt.Sprintf("gobindlua.NewUserData(%s%s, L)", variableType.referenceOrDereferenceUserDataForAssignment(), variable)
 }
 
-func convertGoTypeToLuaSlice(t *types.Slice, variableType *DataType, variable string, level int) string {
-	elem := CreateDataTypeFrom(t.Elem(), variableType.packageSource, variableType.allDeclaredInterfaces)
+func convertGoTypeToLuaSlice(typ types.Type, variableType *DataType, variable string, level int) string {
+	elem := CreateDataTypeFrom(typ, variableType.packageSource, variableType.allDeclaredInterfaces)
 	indexCode := fmt.Sprintf("(%s%s)[idx%d]", variableType.dereference(), variable, level)
 
 	toLuaType := convertGoTypeToLua(indexCode, &elem, level+1)
@@ -121,13 +123,13 @@ func convertGoTypeToLuaSlice(t *types.Slice, variableType *DataType, variable st
 	return execTempl(templ, args)
 }
 
-func convertGoTypeToLuaMap(t *types.Map, variableType *DataType, variable string, level int) string {
-	key := CreateDataTypeFrom(t.Key(), variableType.packageSource, variableType.allDeclaredInterfaces)
+func convertGoTypeToLuaMap(keyType, valType types.Type, variableType *DataType, variable string, level int) string {
+	key := CreateDataTypeFrom(keyType, variableType.packageSource, variableType.allDeclaredInterfaces)
 	keyLuaType := convertGoTypeToLua(fmt.Sprintf("retKey%d", level), &key, level+1)
 	keyGoType := key.convertLuaTypeToGo(fmt.Sprintf("keyVal%d", level), fmt.Sprintf("key%d", level), 3, level+1)
 	keyPointerIndirection := key.ReferenceOrDereferenceForAssignmentToField()
 
-	val := CreateDataTypeFrom(t.Elem(), variableType.packageSource, variableType.allDeclaredInterfaces)
+	val := CreateDataTypeFrom(valType, variableType.packageSource, variableType.allDeclaredInterfaces)
 	valLuaType := convertGoTypeToLua(fmt.Sprintf("ret%d", level), &val, level+1)
 	valGoType := val.convertLuaTypeToGo(fmt.Sprintf("valVal%d", level), fmt.Sprintf("val%d", level), 3, level+1)
 	valPointerIndirection := val.ReferenceOrDereferenceForAssignmentToField()
@@ -247,10 +249,12 @@ func (d *DataType) convertLuaTypeToGo(variableToCreate string, luaVariable strin
 	switch t := d.Type.Underlying().(type) {
 	case *types.Basic:
 		return d.convertLuaTypeToGoPrimitive(variableToCreate, luaVariable, paramNum, level)
+	case *types.Array:
+		return d.convertLuaTypeToGoSlice(t.Elem(), variableToCreate, luaVariable, paramNum, level, true)
 	case *types.Slice:
-		return d.convertLuaTypeToGoSlice(t, variableToCreate, luaVariable, paramNum, level)
+		return d.convertLuaTypeToGoSlice(t.Elem(), variableToCreate, luaVariable, paramNum, level, false)
 	case *types.Map:
-		return d.convertLuaTypeToGoMap(t, variableToCreate, luaVariable, paramNum, level)
+		return d.convertLuaTypeToGoMap(t.Key(), t.Elem(), variableToCreate, luaVariable, paramNum, level)
 	case *types.Struct:
 		return d.convertLuaTypeToStruct(variableToCreate, luaVariable, paramNum, level)
 	case *types.Interface:
@@ -316,12 +320,13 @@ if !ok {
 	return execTempl(templ, args)
 }
 
-func (d *DataType) convertLuaTypeToGoSlice(t *types.Slice, variableToCreate string, luaVariable string, paramNum, level int) string {
-	elem := CreateDataTypeFrom(t.Elem(), d.packageSource, d.allDeclaredInterfaces)
+func (d *DataType) convertLuaTypeToGoSlice(typ types.Type, variableToCreate string, luaVariable string, paramNum, level int, isArray bool) string {
+	elem := CreateDataTypeFrom(typ, d.packageSource, d.allDeclaredInterfaces)
 	toGoType := elem.convertLuaTypeToGo(fmt.Sprintf("v%d", level), fmt.Sprintf("val%d", level), paramNum, level+1)
 	pointerIndirection := elem.ReferenceOrDereferenceForAssignmentToField()
 
 	args := struct {
+		OriginalArrType    string
 		VariableToCreate   string
 		ActualGoType       string
 		LuaVariable        string
@@ -331,6 +336,7 @@ func (d *DataType) convertLuaTypeToGoSlice(t *types.Slice, variableToCreate stri
 		ParamNum           int
 		TemplateArg        string
 	}{
+		OriginalArrType:    d.ActualTemplateArg(),
 		VariableToCreate:   variableToCreate,
 		ActualGoType:       elem.ActualGoType(),
 		LuaVariable:        luaVariable,
@@ -340,7 +346,24 @@ func (d *DataType) convertLuaTypeToGoSlice(t *types.Slice, variableToCreate stri
 		ParamNum:           paramNum,
 		TemplateArg:        elem.TemplateArg(),
 	}
-	templ := `
+
+	templ := ""
+
+	if isArray {
+		templ = `
+{{ .VariableToCreate }}sl, err := gobindlua.MapLuaArrayOrTableToGoSlice[{{ .TemplateArg }}]({{ .LuaVariable }}, func(val{{ .Level }} lua.LValue) {{ .TemplateArg }} {
+	{{ .ToGoType }}
+	return ({{ .TemplateArg }})({{ .PointerIndirection }}v{{ .Level }})
+})
+
+if err != nil {
+	L.ArgError({{ .ParamNum }}, err.Error())
+}
+
+{{ .VariableToCreate }} := ({{ .OriginalArrType }})({{ .VariableToCreate }}sl)
+`
+	} else {
+		templ = `
 {{ .VariableToCreate }}, err := gobindlua.MapLuaArrayOrTableToGoSlice[{{ .TemplateArg }}]({{ .LuaVariable }}, func(val{{ .Level }} lua.LValue) {{ .TemplateArg }} {
 	{{ .ToGoType }}
 	return ({{ .TemplateArg }})({{ .PointerIndirection }}v{{ .Level }})
@@ -348,14 +371,16 @@ func (d *DataType) convertLuaTypeToGoSlice(t *types.Slice, variableToCreate stri
 
 if err != nil {
 	L.ArgError({{ .ParamNum }}, err.Error())
-}		
+}
 `
+	}
+
 	return execTempl(templ, args)
 }
 
-func (d *DataType) convertLuaTypeToGoMap(t *types.Map, variableToCreate string, luaVariable string, paramNum, level int) string {
-	k := CreateDataTypeFrom(t.Key(), d.packageSource, d.allDeclaredInterfaces)
-	v := CreateDataTypeFrom(t.Elem(), d.packageSource, d.allDeclaredInterfaces)
+func (d *DataType) convertLuaTypeToGoMap(keyType, valueType types.Type, variableToCreate string, luaVariable string, paramNum, level int) string {
+	k := CreateDataTypeFrom(keyType, d.packageSource, d.allDeclaredInterfaces)
+	v := CreateDataTypeFrom(valueType, d.packageSource, d.allDeclaredInterfaces)
 	keyGoType := k.convertLuaTypeToGo(fmt.Sprintf("k%d", level), fmt.Sprintf("key%d", level), paramNum, level+1)
 	valGoType := v.convertLuaTypeToGo(fmt.Sprintf("v%d", level), fmt.Sprintf("val%d", level), paramNum, level+1)
 	keyPointerIndirection := k.ReferenceOrDereferenceForAssignmentToField()
@@ -575,6 +600,9 @@ func (d *DataType) ActualTemplateArg() string {
 	indir := d.dereference()
 
 	switch t := d.Type.Underlying().(type) {
+	case *types.Array:
+		sl := CreateDataTypeFrom(t.Elem(), d.packageSource, d.allDeclaredInterfaces)
+		return fmt.Sprintf("[%d]%s", t.Len(), sl.ActualTemplateArg())
 	case *types.Slice:
 		sl := CreateDataTypeFrom(t.Elem(), d.packageSource, d.allDeclaredInterfaces)
 		return indir + "[]" + sl.ActualTemplateArg()
@@ -591,6 +619,9 @@ func (d *DataType) TemplateArg() string {
 	indir := d.dereference()
 
 	switch t := d.Type.Underlying().(type) {
+	case *types.Array:
+		sl := CreateDataTypeFrom(t.Elem(), d.packageSource, d.allDeclaredInterfaces)
+		return indir + "[]" + sl.TemplateArg()
 	case *types.Slice:
 		sl := CreateDataTypeFrom(t.Elem(), d.packageSource, d.allDeclaredInterfaces)
 		return indir + "[]" + sl.TemplateArg()
@@ -615,7 +646,7 @@ func (d *DataType) dereference() string {
 
 func (d *DataType) ActualGoType() string {
 	switch t := d.Type.Underlying().(type) {
-	case *types.Basic, *types.Slice:
+	case *types.Basic, *types.Slice, *types.Array:
 		return d.Type.Underlying().String()
 	case *types.Map:
 		l := CreateDataTypeFrom(t.Key(), d.packageSource, d.allDeclaredInterfaces)
@@ -642,7 +673,7 @@ func (d *DataType) luaType() string {
 		case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "byte", "uint16", "uint32", "uint64", "float32", "float64":
 			return "lua.LNumber"
 		}
-	case *types.Slice:
+	case *types.Slice, *types.Array:
 		return "*gobindlua.LuaArray"
 	case *types.Map:
 		return "*gobindlua.LuaMap"
@@ -664,9 +695,7 @@ func (d *DataType) LuaParamType() string {
 		case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "byte", "uint16", "uint32", "uint64", "float32", "float64":
 			return "L.CheckNumber"
 		}
-	case *types.Slice:
-		return "L.CheckAny"
-	case *types.Map:
+	case *types.Slice, *types.Array, *types.Map:
 		return "L.CheckAny"
 	case *types.Struct, *types.Interface:
 		return "L.CheckUserData"
@@ -686,6 +715,9 @@ func (d *DataType) LuaType(isFunctionReturn bool) string {
 		case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "byte", "uint16", "uint32", "uint64", "float32", "float64":
 			return "number"
 		}
+	case *types.Array:
+		elem := d.CreateDataTypeFrom(t.Elem())
+		return fmt.Sprintf("%s[]", elem.LuaType(isFunctionReturn))
 	case *types.Slice:
 		elem := d.CreateDataTypeFrom(t.Elem())
 
