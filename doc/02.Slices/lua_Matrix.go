@@ -8,7 +8,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func (goType Matrix) RegisterLuaType(L *lua.LState) {
+func (goType *Matrix) RegisterLuaType(L *lua.LState) {
 	staticMethodsTable := L.NewTypeMetatable("matrix")
 	L.SetGlobal("matrix", staticMethodsTable)
 	L.SetField(staticMethodsTable, "new_from", L.NewFunction(luaConstructorMatrixNewMatrixFrom))

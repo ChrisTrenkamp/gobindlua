@@ -49,7 +49,7 @@ func Example() {
 	L := lua.NewState()
 	defer L.Close()
 
-	gobindlua.Register(L, SomeStruct{}, Sub{})
+	gobindlua.Register(L, &SomeStruct{}, &Sub{})
 
 	someStruct := SomeStruct{}
 	L.SetGlobal("s", gobindlua.NewUserData(&someStruct, L))

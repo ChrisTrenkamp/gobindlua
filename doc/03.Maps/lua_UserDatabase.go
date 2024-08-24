@@ -8,7 +8,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func (goType UserDatabase) RegisterLuaType(L *lua.LState) {
+func (goType *UserDatabase) RegisterLuaType(L *lua.LState) {
 	staticMethodsTable := L.NewTypeMetatable("user_database")
 	L.SetGlobal("user_database", staticMethodsTable)
 	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorUserDatabaseNewUserDatabase))

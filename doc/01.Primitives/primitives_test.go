@@ -39,7 +39,11 @@ func Example() {
 	L := lua.NewState()
 	defer L.Close()
 
-	gobindlua.Register(L, PrimitiveStruct{})
+	var registrarPointer *PrimitiveStruct
+	gobindlua.Register(L, registrarPointer)
+	// For ease of use, you can pass in &PrimitiveStruct{} to the Register function as well.
+	// The Register function does not require the pointer to contain a value.  It's simply
+	// for registering the metadata tables.
 
 	if err := L.DoString(script); err != nil {
 		log.Fatal(err)

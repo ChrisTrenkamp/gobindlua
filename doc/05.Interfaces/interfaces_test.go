@@ -23,7 +23,7 @@ func Example() {
 	L := lua.NewState()
 	defer L.Close()
 
-	gobindlua.Register(L, Dog{}, Lion{}, Human{}, MammalList{})
+	gobindlua.Register(L, &Dog{}, &Lion{}, &Human{}, &MammalList{})
 
 	if err := L.DoString(script); err != nil {
 		log.Fatal(err)

@@ -8,7 +8,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func (goType Vector) RegisterLuaType(L *lua.LState) {
+func (goType *Vector) RegisterLuaType(L *lua.LState) {
 	staticMethodsTable := L.NewTypeMetatable("vector")
 	L.SetGlobal("vector", staticMethodsTable)
 	L.SetField(staticMethodsTable, "new_from", L.NewFunction(luaConstructorVectorNewVectorFrom))

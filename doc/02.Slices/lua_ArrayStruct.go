@@ -9,7 +9,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func (goType ArrayStruct) RegisterLuaType(L *lua.LState) {
+func (goType *ArrayStruct) RegisterLuaType(L *lua.LState) {
 	staticMethodsTable := L.NewTypeMetatable("array_struct")
 	L.SetGlobal("array_struct", staticMethodsTable)
 	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorArrayStructNewArrayStruct))

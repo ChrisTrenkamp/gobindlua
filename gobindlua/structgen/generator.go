@@ -241,7 +241,7 @@ func (g *StructGenerator) generateGoCode() ([]byte, error) {
 
 func (g *StructGenerator) buildMetatableInitFunction(out io.Writer) {
 	templ := `
-func (goType {{ .StructToGenerate }}) RegisterLuaType(L *lua.LState) {
+func (goType *{{ .StructToGenerate }}) RegisterLuaType(L *lua.LState) {
 	staticMethodsTable := L.NewTypeMetatable("{{ .StructMetatableIdentifier }}")
 	L.SetGlobal("{{ .StructMetatableIdentifier }}", staticMethodsTable)
 	{{ range $idx, $fn := .StaticFunctions -}}

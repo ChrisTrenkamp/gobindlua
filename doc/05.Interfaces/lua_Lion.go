@@ -8,7 +8,7 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func (goType Lion) RegisterLuaType(L *lua.LState) {
+func (goType *Lion) RegisterLuaType(L *lua.LState) {
 	staticMethodsTable := L.NewTypeMetatable("lion")
 	L.SetGlobal("lion", staticMethodsTable)
 	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorLionNewLion))

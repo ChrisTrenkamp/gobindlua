@@ -72,7 +72,7 @@ func Example() {
 	L := lua.NewState()
 	defer L.Close()
 
-	gobindlua.Register(L, Vector{}, Matrix{}, ArrayStruct{})
+	gobindlua.Register(L, &Vector{}, &Matrix{}, &ArrayStruct{})
 
 	matrix := Matrix{}
 	L.SetGlobal("m", gobindlua.NewUserData(&matrix, L))
