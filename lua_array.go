@@ -6,20 +6,24 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const ARRAY_METATABLE_NAME = "gbl_array"
+const ARRAY_MODULES_NAME = "gbl_array"
+const ARRAY_METATABLE_NAME = "gbl_array_fields"
 
-func RegisterLuaArray(L *lua.LState) {
-	if L.GetGlobal(ARRAY_METATABLE_NAME) != lua.LNil {
-		return
-	}
+func LuaArrayModuleLoader(L *lua.LState) int {
+	staticMethodsTable := L.NewTable()
+	L.SetField(staticMethodsTable, "to_table", L.NewFunction(arrayToTable))
 
-	mt := L.NewTypeMetatable(ARRAY_METATABLE_NAME)
-	L.SetField(mt, "to_table", L.NewFunction(arrayToTable))
-	L.SetGlobal(ARRAY_METATABLE_NAME, mt)
+	L.Push(staticMethodsTable)
 
-	mt.RawSetString("__index", L.NewFunction(arrayIndex))
-	mt.RawSetString("__newindex", L.NewFunction(arrayNewIndex))
-	mt.RawSetString("__len", L.NewFunction(arrayLen))
+	return 1
+}
+
+func LuaArrayRegisterGlobalMetatable(L *lua.LState) {
+	fieldsTable := L.NewTypeMetatable(ARRAY_METATABLE_NAME)
+	L.SetGlobal(ARRAY_METATABLE_NAME, fieldsTable)
+	L.SetField(fieldsTable, "__index", L.NewFunction(arrayIndex))
+	L.SetField(fieldsTable, "__newindex", L.NewFunction(arrayNewIndex))
+	L.SetField(fieldsTable, "__len", L.NewFunction(arrayLen))
 }
 
 type LuaArray struct {

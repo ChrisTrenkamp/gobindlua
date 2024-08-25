@@ -10,6 +10,10 @@ import (
 )
 
 const script = `
+local user = require "user"
+local user_database = require "user_database"
+local gbl_map = require "gbl_map"
+
 local user1 = user.new("Mike Smith", 42, "mike.smith@example.com")
 local user2 = user.new("Ryan Kennedy", 23, "rkennedy04021@nyu.com")
 local user3 = user.new("Robert Rose", 70, "rrose00011@aol.com")

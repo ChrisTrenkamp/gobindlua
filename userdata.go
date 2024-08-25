@@ -2,31 +2,23 @@ package gobindlua
 
 import lua "github.com/yuin/gopher-lua"
 
-type LuaRegister interface {
-	RegisterLuaType(L *lua.LState)
+type LuaRegistrar interface {
+	LuaModuleName() string
+	LuaModuleLoader(L *lua.LState) int
+	LuaRegisterGlobalMetatable(L *lua.LState)
 }
 
-func Register(L *lua.LState, r ...LuaRegister) {
-	RegisterLuaArray(L)
-	RegisterLuaMap(L)
+func Register(L *lua.LState, toRegister ...LuaRegistrar) {
+	LuaArrayModuleLoader(L)
+	L.PreloadModule(ARRAY_MODULES_NAME, LuaArrayModuleLoader)
+	LuaArrayRegisterGlobalMetatable(L)
+	L.PreloadModule(MAP_MODULES_NAME, LuaMapModuleLoader)
+	LuaMapRegisterGlobalMetatable(L)
 
-	for _, i := range r {
-		i.RegisterLuaType(L)
+	for _, i := range toRegister {
+		L.PreloadModule(i.LuaModuleName(), i.LuaModuleLoader)
+		i.LuaRegisterGlobalMetatable(L)
 	}
-}
-
-func Funcs(r func(*lua.LState)) LuaRegister {
-	return &internalRegistrar{
-		reg: r,
-	}
-}
-
-type internalRegistrar struct {
-	reg func(l *lua.LState)
-}
-
-func (i *internalRegistrar) RegisterLuaType(L *lua.LState) {
-	i.reg(L)
 }
 
 type LuaUserData interface {

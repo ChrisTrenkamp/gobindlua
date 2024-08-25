@@ -8,12 +8,21 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func (goType *Vector) RegisterLuaType(L *lua.LState) {
-	staticMethodsTable := L.NewTypeMetatable("vector")
-	L.SetGlobal("vector", staticMethodsTable)
+func (goType *Vector) LuaModuleName() string {
+	return "vector"
+}
+
+func (goType *Vector) LuaModuleLoader(L *lua.LState) int {
+	staticMethodsTable := L.NewTable()
 	L.SetField(staticMethodsTable, "new_from", L.NewFunction(luaConstructorVectorNewVectorFrom))
 	L.SetField(staticMethodsTable, "new_variadic", L.NewFunction(luaConstructorVectorNewVectorVariadic))
 
+	L.Push(staticMethodsTable)
+
+	return 1
+}
+
+func (goType *Vector) LuaRegisterGlobalMetatable(L *lua.LState) {
 	fieldsTable := L.NewTypeMetatable(goType.LuaMetatableType())
 	L.SetGlobal(goType.LuaMetatableType(), fieldsTable)
 	L.SetField(fieldsTable, "__index", L.NewFunction(luaAccessVector))

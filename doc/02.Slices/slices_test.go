@@ -10,6 +10,11 @@ import (
 )
 
 const script = `
+local vector = require "vector"
+local array_struct = require "array_struct"
+local matrix = require "matrix"
+local gbl_array = require "gbl_array"
+
 --[[ Notice you can use lua tables as parameters for slices. ]]
 local a = vector.new_from({3,2,1})
 for i=1,#a.elements,1 do
@@ -72,7 +77,7 @@ func Example() {
 	L := lua.NewState()
 	defer L.Close()
 
-	gobindlua.Register(L, &Vector{}, &Matrix{}, &ArrayStruct{})
+	gobindlua.Register(L, &Vector{}, &ArrayStruct{}, &Matrix{})
 
 	matrix := Matrix{}
 	L.SetGlobal("m", gobindlua.NewUserData(&matrix, L))

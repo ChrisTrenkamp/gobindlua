@@ -68,7 +68,7 @@ func (g *PackageGenerator) loadSourcePackage() error {
 
 func (g *PackageGenerator) PackageToGenerateFunctionName() string {
 	caser := cases.Title(language.English)
-	return "Register" + caser.String(g.packageToGenerate) + "LuaType"
+	return caser.String(g.packageToGenerate) + "ModuleLoader"
 }
 
 func (g *PackageGenerator) PackageToGenerateMetatableName() string {
@@ -119,12 +119,14 @@ func (g *PackageGenerator) generateGoCode() ([]byte, error) {
 
 func (g *PackageGenerator) buildMetatableInitFunction(out io.Writer) {
 	templ := `
-func {{ .PackageToGenerateFunctionName }}(L *lua.LState) {
-	staticMethodsTable := L.NewTypeMetatable("{{ .PackageToGenerateMetatableName }}")
-	L.SetGlobal("{{ .PackageToGenerateMetatableName }}", staticMethodsTable)
+func {{ .PackageToGenerateFunctionName }}(L *lua.LState) int {
+	staticMethodsTable := L.NewTable()
 	{{ range $idx, $fn := .StaticFunctions -}}
 		L.SetField(staticMethodsTable, "{{ $fn.LuaFnName }}", L.NewFunction({{ $fn.SourceFnName }}))
 	{{ end }}
+    L.Push(staticMethodsTable)
+
+	return 1
 }
 `
 

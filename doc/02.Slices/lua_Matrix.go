@@ -8,11 +8,20 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func (goType *Matrix) RegisterLuaType(L *lua.LState) {
-	staticMethodsTable := L.NewTypeMetatable("matrix")
-	L.SetGlobal("matrix", staticMethodsTable)
+func (goType *Matrix) LuaModuleName() string {
+	return "matrix"
+}
+
+func (goType *Matrix) LuaModuleLoader(L *lua.LState) int {
+	staticMethodsTable := L.NewTable()
 	L.SetField(staticMethodsTable, "new_from", L.NewFunction(luaConstructorMatrixNewMatrixFrom))
 
+	L.Push(staticMethodsTable)
+
+	return 1
+}
+
+func (goType *Matrix) LuaRegisterGlobalMetatable(L *lua.LState) {
 	fieldsTable := L.NewTypeMetatable(goType.LuaMetatableType())
 	L.SetGlobal(goType.LuaMetatableType(), fieldsTable)
 	L.SetField(fieldsTable, "__index", L.NewFunction(luaAccessMatrix))

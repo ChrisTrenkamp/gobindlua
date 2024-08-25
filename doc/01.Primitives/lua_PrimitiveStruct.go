@@ -9,11 +9,20 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func (goType *PrimitiveStruct) RegisterLuaType(L *lua.LState) {
-	staticMethodsTable := L.NewTypeMetatable("primitive_struct")
-	L.SetGlobal("primitive_struct", staticMethodsTable)
+func (goType *PrimitiveStruct) LuaModuleName() string {
+	return "primitive_struct"
+}
+
+func (goType *PrimitiveStruct) LuaModuleLoader(L *lua.LState) int {
+	staticMethodsTable := L.NewTable()
 	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorPrimitiveStructNewPrimitiveStruct))
 
+	L.Push(staticMethodsTable)
+
+	return 1
+}
+
+func (goType *PrimitiveStruct) LuaRegisterGlobalMetatable(L *lua.LState) {
 	fieldsTable := L.NewTypeMetatable(goType.LuaMetatableType())
 	L.SetGlobal(goType.LuaMetatableType(), fieldsTable)
 	L.SetField(fieldsTable, "__index", L.NewFunction(luaAccessPrimitiveStruct))

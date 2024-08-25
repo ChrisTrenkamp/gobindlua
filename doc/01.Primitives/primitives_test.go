@@ -10,6 +10,8 @@ import (
 )
 
 const script = `
+local primitive_struct = require "primitive_struct"
+
 --[[ You can call the constructor functions and methods and access the fields from Lua. ]]
 data = primitive_struct.new()
 data.my_bool = true
@@ -65,7 +67,7 @@ func Example() {
 	// WillBeExcluded has been excluded: true
 	// MySpecializedInt: 9001
 	// DivideMyInt: 21
-	// DivideMyInt error: <string>:21: divide by zero error
+	// DivideMyInt error: <string>:23: divide by zero error
 	// ExcludedMethod has been excluded: true
 	//{
 	//	"MyBool": true,

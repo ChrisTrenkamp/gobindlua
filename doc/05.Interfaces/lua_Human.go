@@ -8,11 +8,20 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func (goType *Human) RegisterLuaType(L *lua.LState) {
-	staticMethodsTable := L.NewTypeMetatable("human")
-	L.SetGlobal("human", staticMethodsTable)
+func (goType *Human) LuaModuleName() string {
+	return "human"
+}
+
+func (goType *Human) LuaModuleLoader(L *lua.LState) int {
+	staticMethodsTable := L.NewTable()
 	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorHumanNewHuman))
 
+	L.Push(staticMethodsTable)
+
+	return 1
+}
+
+func (goType *Human) LuaRegisterGlobalMetatable(L *lua.LState) {
 	fieldsTable := L.NewTypeMetatable(goType.LuaMetatableType())
 	L.SetGlobal(goType.LuaMetatableType(), fieldsTable)
 	L.SetField(fieldsTable, "__index", L.NewFunction(luaAccessHuman))

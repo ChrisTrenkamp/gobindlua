@@ -6,12 +6,14 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func RegisterFunctionsLuaType(L *lua.LState) {
-	staticMethodsTable := L.NewTypeMetatable("functions")
-	L.SetGlobal("functions", staticMethodsTable)
+func FunctionsModuleLoader(L *lua.LState) int {
+	staticMethodsTable := L.NewTable()
 	L.SetField(staticMethodsTable, "print_me", L.NewFunction(luaFunctionPrintMe))
 	L.SetField(staticMethodsTable, "split", L.NewFunction(luaFunctionSplit))
 
+	L.Push(staticMethodsTable)
+
+	return 1
 }
 
 func luaFunctionPrintMe(L *lua.LState) int {

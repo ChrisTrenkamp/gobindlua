@@ -8,6 +8,11 @@ import (
 )
 
 const script = `
+local dog = require "dog"
+local lion = require "lion"
+local human = require "human"
+local mammal_list = require "mammal_list"
+
 local mammals = mammal_list.new()
 mammals.pet = dog.new()
 mammals.non_pets = { lion.new(), human.new() }

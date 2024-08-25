@@ -176,7 +176,7 @@ func (g *StructGenerator) gatherReceivers() []functiontype.FunctionType {
 			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Recv != nil {
 				fnName := fn.Name.Name
 
-				if fnName == "RegisterLuaType" || fnName == "LuaMetatableType" {
+				if fnName == "LuaModuleName" || fnName == "LuaRegisterGlobalMetatable" || fnName == "LuaModuleLoader" || fnName == "LuaMetatableType" {
 					continue
 				}
 
@@ -241,12 +241,21 @@ func (g *StructGenerator) generateGoCode() ([]byte, error) {
 
 func (g *StructGenerator) buildMetatableInitFunction(out io.Writer) {
 	templ := `
-func (goType *{{ .StructToGenerate }}) RegisterLuaType(L *lua.LState) {
-	staticMethodsTable := L.NewTypeMetatable("{{ .StructMetatableIdentifier }}")
-	L.SetGlobal("{{ .StructMetatableIdentifier }}", staticMethodsTable)
+func (goType *{{ .StructToGenerate }}) LuaModuleName() string {
+	return "{{ .StructMetatableIdentifier }}"
+}
+
+func (goType *{{ .StructToGenerate }}) LuaModuleLoader(L *lua.LState) int {
+	staticMethodsTable := L.NewTable()
 	{{ range $idx, $fn := .StaticFunctions -}}
 		L.SetField(staticMethodsTable, "{{ $fn.LuaFnName }}", L.NewFunction({{ $fn.SourceFnName }}))
 	{{ end }}
+    L.Push(staticMethodsTable)
+
+	return 1
+}
+
+func (goType *{{ .StructToGenerate }}) LuaRegisterGlobalMetatable(L *lua.LState) {
 	fieldsTable := L.NewTypeMetatable(goType.LuaMetatableType())
 	L.SetGlobal(goType.LuaMetatableType(), fieldsTable)
 	L.SetField(fieldsTable, "__index", L.NewFunction({{ .SourceUserDataAccess }}))

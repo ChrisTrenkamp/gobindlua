@@ -9,6 +9,8 @@ import (
 )
 
 const script = `
+local sub = require "sub"
+
 --[[ gobindlua will even work with pointers. ]]
 s.a = {
 	["a"]={
@@ -49,7 +51,7 @@ func Example() {
 	L := lua.NewState()
 	defer L.Close()
 
-	gobindlua.Register(L, &SomeStruct{}, &Sub{})
+	gobindlua.Register(L, &Sub{}, &SomeStruct{})
 
 	someStruct := SomeStruct{}
 	L.SetGlobal("s", gobindlua.NewUserData(&someStruct, L))

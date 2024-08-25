@@ -6,20 +6,24 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const MAP_METATABLE_NAME = "gbl_map"
+const MAP_MODULES_NAME = "gbl_map"
+const MAP_METATABLE_NAME = "gbl_map_fields"
 
-func RegisterLuaMap(L *lua.LState) {
-	if L.GetGlobal(MAP_METATABLE_NAME) != lua.LNil {
-		return
-	}
+func LuaMapModuleLoader(L *lua.LState) int {
+	staticMethodsTable := L.NewTable()
+	L.SetField(staticMethodsTable, "to_table", L.NewFunction(mapToTable))
 
-	mt := L.NewTypeMetatable(MAP_METATABLE_NAME)
-	L.SetField(mt, "to_table", L.NewFunction(mapToTable))
-	L.SetGlobal(MAP_METATABLE_NAME, mt)
+	L.Push(staticMethodsTable)
 
-	mt.RawSetString("__index", L.NewFunction(mapIndex))
-	mt.RawSetString("__newindex", L.NewFunction(mapNewIndex))
-	mt.RawSetString("__len", L.NewFunction(mapLen))
+	return 1
+}
+
+func LuaMapRegisterGlobalMetatable(L *lua.LState) {
+	fieldsTable := L.NewTypeMetatable(MAP_METATABLE_NAME)
+	L.SetGlobal(MAP_METATABLE_NAME, fieldsTable)
+	L.SetField(fieldsTable, "__index", L.NewFunction(mapIndex))
+	L.SetField(fieldsTable, "__newindex", L.NewFunction(mapNewIndex))
+	L.SetField(fieldsTable, "__len", L.NewFunction(mapLen))
 }
 
 type LuaMap struct {
