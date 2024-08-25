@@ -98,13 +98,13 @@ func MapLuaArrayOrTableToGoSlice[T any](p lua.LValue, level int, mapper func(val
 		ar, ok := t.Value.(*LuaArray)
 
 		if !ok {
-			return nil, badArrayOrTableCast(ret, ar, level)
+			return nil, badArrayOrTableCast(ret, t, level)
 		}
 
 		ret, ok = ar.Slice.([]T)
 
 		if !ok {
-			return nil, badArrayOrTableCast(ret, ar.Slice, level)
+			return nil, badArrayOrTableCast(ret, t, level)
 		}
 
 		return ret, nil

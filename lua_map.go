@@ -83,13 +83,13 @@ func MapLuaArrayOrTableToGoMap[K comparable, V any](p lua.LValue, level int, map
 		ar, ok := t.Value.(*LuaMap)
 
 		if !ok {
-			return nil, badArrayOrTableCast(ret, ar, level)
+			return nil, badArrayOrTableCast(ret, t, level)
 		}
 
 		ret, ok = ar.Map.(map[K]V)
 
 		if !ok {
-			return nil, badArrayOrTableCast(ret, t.Value, level)
+			return nil, badArrayOrTableCast(ret, t, level)
 		}
 
 		return ret, nil
