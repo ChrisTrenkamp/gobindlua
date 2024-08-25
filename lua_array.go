@@ -1,8 +1,6 @@
 package gobindlua
 
 import (
-	"fmt"
-
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -92,24 +90,26 @@ func arrayToTable(L *lua.LState) int {
 	return 1
 }
 
-func MapLuaArrayOrTableToGoSlice[T any](p lua.LValue, mapper func(val lua.LValue) T) ([]T, error) {
+func MapLuaArrayOrTableToGoSlice[T any](p lua.LValue, level int, mapper func(val lua.LValue) T) ([]T, error) {
+	var ret []T
+
 	switch t := p.(type) {
 	case *lua.LUserData:
 		ar, ok := t.Value.(*LuaArray)
 
 		if !ok {
-			return nil, fmt.Errorf("incorrect user type.  expected LuaArray, got %T", ar)
+			return nil, badArrayOrTableCast(ret, ar, level)
 		}
 
-		sl, ok := ar.Slice.([]T)
+		ret, ok = ar.Slice.([]T)
 
 		if !ok {
-			return nil, fmt.Errorf("incorrect array type in LuaArray.  expected %T, got %T", sl, ar.Slice)
+			return nil, badArrayOrTableCast(ret, ar.Slice, level)
 		}
 
-		return sl, nil
+		return ret, nil
 	case *lua.LTable:
-		ret := make([]T, t.MaxN())
+		ret = make([]T, t.MaxN())
 
 		for i := 1; i <= t.MaxN(); i++ {
 			ret[i-1] = mapper(t.RawGetInt(i))
@@ -118,9 +118,9 @@ func MapLuaArrayOrTableToGoSlice[T any](p lua.LValue, mapper func(val lua.LValue
 		return ret, nil
 	case *lua.LNilType:
 		return nil, nil
+	default:
+		return nil, badArrayOrTableCast(ret, t, level)
 	}
-
-	return nil, fmt.Errorf("expected LuaArray or table")
 }
 
 func MapVariadicArgsToGoSlice[T any](start int, L *lua.LState, mapper func(val lua.LValue) T) ([]T, error) {

@@ -35,12 +35,12 @@ func luaConstructorVectorNewVectorFrom(L *lua.LState) int {
 
 	{
 
-		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](L.CheckAny(1), func(val0 lua.LValue) float64 {
+		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](L.CheckAny(1), 0, func(val0 lua.LValue) float64 {
 
 			v0, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(1, "argument not a float64 instance")
+				L.ArgError(1, gobindlua.CastArgError("float64", val0))
 			}
 
 			return (float64)(v0)
@@ -71,7 +71,7 @@ func luaConstructorVectorNewVectorVariadic(L *lua.LState) int {
 			v0, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(1, "argument not a float64 instance")
+				L.ArgError(1, gobindlua.CastArgError("float64", val0))
 			}
 
 			return (float64)(v0)
@@ -97,11 +97,11 @@ func (r *Vector) LuaMetatableType() string {
 
 func luaCheckVector(param int, L *lua.LState) *Vector {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*Vector); ok {
-		return v
+	v, ok := ud.Value.(*Vector)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("Vector", ud.Value))
 	}
-	L.ArgError(1, "Vector expected")
-	return nil
+	return v
 }
 
 func luaAccessVector(L *lua.LState) int {
@@ -119,7 +119,7 @@ func luaAccessVector(L *lua.LState) int {
 				t0, ok := val0.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, "argument not a float64 instance")
+					L.ArgError(3, gobindlua.CastArgError("float64", val0))
 				}
 
 				(p1.Elements)[idx0] = (float64)(t0)
@@ -146,12 +146,12 @@ func luaSetVector(L *lua.LState) int {
 	switch p2 {
 	case "elements":
 
-		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](L.CheckAny(3), func(val0 lua.LValue) float64 {
+		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](L.CheckAny(3), 0, func(val0 lua.LValue) float64 {
 
 			v0, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(3, "argument not a float64 instance")
+				L.ArgError(3, gobindlua.CastArgError("float64", val0))
 			}
 
 			return (float64)(v0)
@@ -180,7 +180,7 @@ func luaMethodVectorInnerProduct(L *lua.LState) int {
 		ud, ok := L.CheckUserData(2).Value.(*Vector)
 
 		if !ok {
-			L.ArgError(3, "Vector expected")
+			L.ArgError(3, gobindlua.CastArgError("Vector", L.CheckUserData(2)))
 		}
 
 		p0 = *ud
@@ -207,7 +207,7 @@ func luaMethodVectorOuterProduct(L *lua.LState) int {
 		ud, ok := L.CheckUserData(2).Value.(*Vector)
 
 		if !ok {
-			L.ArgError(3, "Vector expected")
+			L.ArgError(3, gobindlua.CastArgError("Vector", L.CheckUserData(2)))
 		}
 
 		p0 = *ud

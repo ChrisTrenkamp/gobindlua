@@ -1,8 +1,6 @@
 package gobindlua
 
 import (
-	"fmt"
-
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -77,24 +75,26 @@ func mapToTable(L *lua.LState) int {
 	return 1
 }
 
-func MapLuaArrayOrTableToGoMap[K comparable, V any](p lua.LValue, mapper func(k, v lua.LValue) (K, V)) (map[K]V, error) {
+func MapLuaArrayOrTableToGoMap[K comparable, V any](p lua.LValue, level int, mapper func(k, v lua.LValue) (K, V)) (map[K]V, error) {
+	var ret map[K]V
+
 	switch t := p.(type) {
 	case *lua.LUserData:
 		ar, ok := t.Value.(*LuaMap)
 
 		if !ok {
-			return nil, fmt.Errorf("incorrect user type.  expected LuaMap, got %T", ar)
+			return nil, badArrayOrTableCast(ret, ar, level)
 		}
 
-		m, ok := ar.Map.(map[K]V)
+		ret, ok = ar.Map.(map[K]V)
 
 		if !ok {
-			return nil, fmt.Errorf("incorrect array type in LuaMap.  expected %T, got %T", m, t.Value)
+			return nil, badArrayOrTableCast(ret, t.Value, level)
 		}
 
-		return m, nil
+		return ret, nil
 	case *lua.LTable:
-		ret := make(map[K]V)
+		ret = make(map[K]V)
 
 		t.ForEach(func(k, v lua.LValue) {
 			ck, cv := mapper(k, v)
@@ -104,7 +104,7 @@ func MapLuaArrayOrTableToGoMap[K comparable, V any](p lua.LValue, mapper func(k,
 		return ret, nil
 	case *lua.LNilType:
 		return nil, nil
+	default:
+		return nil, badArrayOrTableCast(ret, t, level)
 	}
-
-	return nil, fmt.Errorf("expected LuaArray or table")
 }

@@ -50,11 +50,11 @@ func (r *Sub) LuaMetatableType() string {
 
 func luaCheckSub(param int, L *lua.LState) *Sub {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*Sub); ok {
-		return v
+	v, ok := ud.Value.(*Sub)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("Sub", ud.Value))
 	}
-	L.ArgError(1, "Sub expected")
-	return nil
+	return v
 }
 
 func luaAccessSub(L *lua.LState) int {

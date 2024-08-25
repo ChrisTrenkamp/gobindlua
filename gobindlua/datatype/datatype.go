@@ -294,12 +294,14 @@ func (d *DataType) convertLuaTypeToGoPrimitive(variableToCreate string, luaVaria
 		LuaType          string
 		ParamNum         int
 		DeclaredGoType   string
+		Level            int
 	}{
 		VariableToCreate: variableToCreate,
 		LuaVariable:      luaVariable,
 		LuaType:          d.luaType(),
 		ParamNum:         paramNum,
 		DeclaredGoType:   d.declaredGoType(),
+		Level:            level,
 	}
 
 	if d.PointerIndirection == 0 {
@@ -307,7 +309,7 @@ func (d *DataType) convertLuaTypeToGoPrimitive(variableToCreate string, luaVaria
 {{ .VariableToCreate }}, ok := {{ .LuaVariable }}.({{ .LuaType }})
 
 if !ok {
-	L.ArgError({{ .ParamNum }}, "argument not a {{ .DeclaredGoType }} instance")
+	L.ArgError({{ .ParamNum }}, gobindlua.CastArgError("{{ .DeclaredGoType }}", {{ .LuaVariable }}))
 }
 `
 		return execTempl(templ, args)
@@ -317,7 +319,7 @@ if !ok {
 {{ .VariableToCreate }}_n, ok := {{ .LuaVariable }}.({{ .LuaType }})
 
 if !ok {
-	L.ArgError({{ .ParamNum }}, "argument not a {{ .DeclaredGoType }} instance")
+	L.ArgError({{ .ParamNum }}, gobindlua.TableElementCastError("{{ .DeclaredGoType }}", {{ .LuaVariable }}, {{ .Level }}))
 }
 
 {{ .VariableToCreate }} := {{ .DeclaredGoType }}({{ .VariableToCreate }}_n)
@@ -356,7 +358,7 @@ func (d *DataType) convertLuaTypeToGoSlice(typ types.Type, variableToCreate stri
 
 	if isArray {
 		templ = `
-{{ .VariableToCreate }}sl, err := gobindlua.MapLuaArrayOrTableToGoSlice[{{ .TemplateArg }}]({{ .LuaVariable }}, func(val{{ .Level }} lua.LValue) {{ .TemplateArg }} {
+{{ .VariableToCreate }}sl, err := gobindlua.MapLuaArrayOrTableToGoSlice[{{ .TemplateArg }}]({{ .LuaVariable }}, {{ .Level }}, func(val{{ .Level }} lua.LValue) {{ .TemplateArg }} {
 	{{ .ToGoType }}
 	return ({{ .TemplateArg }})({{ .PointerIndirection }}v{{ .Level }})
 })
@@ -369,7 +371,7 @@ if err != nil {
 `
 	} else {
 		templ = `
-{{ .VariableToCreate }}, err := gobindlua.MapLuaArrayOrTableToGoSlice[{{ .TemplateArg }}]({{ .LuaVariable }}, func(val{{ .Level }} lua.LValue) {{ .TemplateArg }} {
+{{ .VariableToCreate }}, err := gobindlua.MapLuaArrayOrTableToGoSlice[{{ .TemplateArg }}]({{ .LuaVariable }}, {{ .Level }}, func(val{{ .Level }} lua.LValue) {{ .TemplateArg }} {
 	{{ .ToGoType }}
 	return ({{ .TemplateArg }})({{ .PointerIndirection }}v{{ .Level }})
 })
@@ -420,7 +422,7 @@ func (d *DataType) convertLuaTypeToGoMap(keyType, valueType types.Type, variable
 	}
 
 	templ := `
-{{ .VariableToCreate }}, err := gobindlua.MapLuaArrayOrTableToGoMap[{{ .KeyTemplateArg }}, {{ .ValTemplateArg }}]({{ .LuaVariable }}, func(key{{ .Level }}, val{{ .Level }} lua.LValue) ({{ .KeyTemplateArg }}, {{ .ValTemplateArg }}) {
+{{ .VariableToCreate }}, err := gobindlua.MapLuaArrayOrTableToGoMap[{{ .KeyTemplateArg }}, {{ .ValTemplateArg }}]({{ .LuaVariable }}, {{ .Level }}, func(key{{ .Level }}, val{{ .Level }} lua.LValue) ({{ .KeyTemplateArg }}, {{ .ValTemplateArg }}) {
 	{{ .KeyGoType }}
 	{{ .ValGoType }}
 	return ({{ .KeyTemplateArg }})({{ .KeyPointerIndirection }}k{{ .Level }}), ({{ .ValTemplateArg }})({{ .ValPointerIndirection }}v{{ .Level }})
@@ -440,11 +442,13 @@ func (d *DataType) convertLuaTypeToStruct(variableToCreate string, luaVariable s
 		LuaVariable      string
 		DeclaredGoType   string
 		ParamNum         int
+		Level            int
 	}{
 		VariableToCreate: variableToCreate,
 		LuaVariable:      luaVariable,
 		DeclaredGoType:   d.declaredGoType(),
 		ParamNum:         paramNum,
+		Level:            level,
 	}
 
 	if level == 0 {
@@ -452,7 +456,7 @@ func (d *DataType) convertLuaTypeToStruct(variableToCreate string, luaVariable s
 {{ .VariableToCreate }}, ok := {{ .LuaVariable }}.Value.(*{{ .DeclaredGoType }})
 
 if !ok {
-	L.ArgError(3, "{{ .DeclaredGoType }} expected")
+	L.ArgError(3, gobindlua.CastArgError("{{ .DeclaredGoType }}", {{ .LuaVariable }}))
 }
 `
 
@@ -463,13 +467,13 @@ if !ok {
 {{ .VariableToCreate }}_ud, ok := {{ .LuaVariable }}.(*lua.LUserData)
 
 if !ok {
-	L.ArgError({{ .ParamNum }}, "UserData expected")
+	L.ArgError({{ .ParamNum }}, gobindlua.TableElementCastError("{{ .DeclaredGoType }}", {{ .LuaVariable }}, {{ .Level }}))
 }
 
 {{ .VariableToCreate }}, ok := {{ .VariableToCreate }}_ud.Value.(*{{ .DeclaredGoType }})
 
 if !ok {
-	L.ArgError(3, "{{ .DeclaredGoType }} expected")
+	L.ArgError(3, gobindlua.TableElementCastError("{{ .DeclaredGoType }}", {{ .VariableToCreate }}_ud.Value, {{ .Level }}))
 }
 `
 
@@ -492,11 +496,13 @@ func (d *DataType) convertLuaTypeToInterface(variableToCreate string, luaVariabl
 		LuaVariable      string
 		DeclaredGoType   string
 		ParamNum         int
+		Level            int
 	}{
 		VariableToCreate: variableToCreate,
 		LuaVariable:      luaVariable,
 		DeclaredGoType:   d.declaredGoType(),
 		ParamNum:         paramNum,
+		Level:            level,
 	}
 
 	if d.isEmptyInterface() {
@@ -512,7 +518,7 @@ func (d *DataType) convertLuaTypeToInterface(variableToCreate string, luaVariabl
 {{ .VariableToCreate }}, ok := {{ .LuaVariable }}.Value.({{ .DeclaredGoType }})
 
 if !ok {
-	L.ArgError(3, "{{ .DeclaredGoType }} expected")
+	L.ArgError(3, gobindlua.TableElementCastError("{{ .DeclaredGoType }}", {{ .LuaVariable }}.Value, {{ .Level }}))
 }
 `
 
@@ -523,13 +529,13 @@ if !ok {
 {{ .VariableToCreate }}_ud, ok := {{ .LuaVariable }}.(*lua.LUserData)
 
 if !ok {
-	L.ArgError({{ .ParamNum }}, "UserData expected")
+	L.ArgError({{ .ParamNum }}, gobindlua.TableElementCastError("{{ .DeclaredGoType }}", {{ .LuaVariable }}, {{ .Level }}))
 }
 
 {{ .VariableToCreate }}, ok := {{ .VariableToCreate }}_ud.Value.({{ .DeclaredGoType }})
 
 if !ok {
-	L.ArgError(3, "{{ .DeclaredGoType }} expected")
+	L.ArgError(3, gobindlua.TableElementCastError("{{ .DeclaredGoType }}", {{ .VariableToCreate }}_ud.Value, {{ .Level }}))
 }
 `
 

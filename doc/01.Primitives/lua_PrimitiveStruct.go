@@ -44,11 +44,11 @@ func (r *PrimitiveStruct) LuaMetatableType() string {
 
 func luaCheckPrimitiveStruct(param int, L *lua.LState) *PrimitiveStruct {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*PrimitiveStruct); ok {
-		return v
+	v, ok := ud.Value.(*PrimitiveStruct)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("PrimitiveStruct", ud.Value))
 	}
-	L.ArgError(1, "PrimitiveStruct expected")
-	return nil
+	return v
 }
 
 func luaAccessPrimitiveStruct(L *lua.LState) int {

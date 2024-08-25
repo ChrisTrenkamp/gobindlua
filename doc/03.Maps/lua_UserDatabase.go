@@ -44,24 +44,24 @@ func luaConstructorUserDatabaseNewUserDatabaseFrom(L *lua.LState) int {
 
 	{
 
-		ud, err := gobindlua.MapLuaArrayOrTableToGoMap[int, User](L.CheckAny(1), func(key0, val0 lua.LValue) (int, User) {
+		ud, err := gobindlua.MapLuaArrayOrTableToGoMap[int, User](L.CheckAny(1), 0, func(key0, val0 lua.LValue) (int, User) {
 
 			k0, ok := key0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(1, "argument not a int instance")
+				L.ArgError(1, gobindlua.CastArgError("int", key0))
 			}
 
 			v0_ud, ok := val0.(*lua.LUserData)
 
 			if !ok {
-				L.ArgError(1, "UserData expected")
+				L.ArgError(1, gobindlua.TableElementCastError("User", val0, 1))
 			}
 
 			v0, ok := v0_ud.Value.(*User)
 
 			if !ok {
-				L.ArgError(3, "User expected")
+				L.ArgError(3, gobindlua.TableElementCastError("User", v0_ud.Value, 1))
 			}
 
 			return (int)(k0), (User)(*v0)
@@ -87,11 +87,11 @@ func (r *UserDatabase) LuaMetatableType() string {
 
 func luaCheckUserDatabase(param int, L *lua.LState) *UserDatabase {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*UserDatabase); ok {
-		return v
+	v, ok := ud.Value.(*UserDatabase)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("UserDatabase", ud.Value))
 	}
-	L.ArgError(1, "UserDatabase expected")
-	return nil
+	return v
 }
 
 func luaAccessUserDatabase(L *lua.LState) int {
@@ -108,7 +108,7 @@ func luaAccessUserDatabase(L *lua.LState) int {
 				keyVal0, ok := key0.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, "argument not a int instance")
+					L.ArgError(3, gobindlua.CastArgError("int", key0))
 				}
 
 				ret0 := (p1.Users)[(int)(keyVal0)]
@@ -119,19 +119,19 @@ func luaAccessUserDatabase(L *lua.LState) int {
 				keyVal0, ok := key0.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, "argument not a int instance")
+					L.ArgError(3, gobindlua.CastArgError("int", key0))
 				}
 
 				valVal0_ud, ok := val0.(*lua.LUserData)
 
 				if !ok {
-					L.ArgError(3, "UserData expected")
+					L.ArgError(3, gobindlua.TableElementCastError("User", val0, 1))
 				}
 
 				valVal0, ok := valVal0_ud.Value.(*User)
 
 				if !ok {
-					L.ArgError(3, "User expected")
+					L.ArgError(3, gobindlua.TableElementCastError("User", valVal0_ud.Value, 1))
 				}
 
 				(p1.Users)[(int)(keyVal0)] = (User)(*valVal0)
@@ -161,24 +161,24 @@ func luaSetUserDatabase(L *lua.LState) int {
 	switch p2 {
 	case "users":
 
-		ud, err := gobindlua.MapLuaArrayOrTableToGoMap[int, User](L.CheckAny(3), func(key0, val0 lua.LValue) (int, User) {
+		ud, err := gobindlua.MapLuaArrayOrTableToGoMap[int, User](L.CheckAny(3), 0, func(key0, val0 lua.LValue) (int, User) {
 
 			k0, ok := key0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(3, "argument not a int instance")
+				L.ArgError(3, gobindlua.CastArgError("int", key0))
 			}
 
 			v0_ud, ok := val0.(*lua.LUserData)
 
 			if !ok {
-				L.ArgError(3, "UserData expected")
+				L.ArgError(3, gobindlua.TableElementCastError("User", val0, 1))
 			}
 
 			v0, ok := v0_ud.Value.(*User)
 
 			if !ok {
-				L.ArgError(3, "User expected")
+				L.ArgError(3, gobindlua.TableElementCastError("User", v0_ud.Value, 1))
 			}
 
 			return (int)(k0), (User)(*v0)

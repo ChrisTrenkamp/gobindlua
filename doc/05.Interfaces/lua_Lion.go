@@ -43,11 +43,11 @@ func (r *Lion) LuaMetatableType() string {
 
 func luaCheckLion(param int, L *lua.LState) *Lion {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*Lion); ok {
-		return v
+	v, ok := ud.Value.(*Lion)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("Lion", ud.Value))
 	}
-	L.ArgError(1, "Lion expected")
-	return nil
+	return v
 }
 
 func luaAccessLion(L *lua.LState) int {

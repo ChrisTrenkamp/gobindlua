@@ -287,11 +287,11 @@ func (r *{{ .StructToGenerate }}) LuaMetatableType() string {
 
 func {{ .UserDataCheckFn }}(param int, L *lua.LState) *{{ .StructToGenerate }} {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*{{ .StructToGenerate }}); ok {
-		return v
+	v, ok := ud.Value.(*{{ .StructToGenerate }})
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("{{ .StructToGenerate }}", ud.Value))
 	}
-	L.ArgError(1, "{{ .StructToGenerate }} expected")
-	return nil
+	return v
 }
 `
 

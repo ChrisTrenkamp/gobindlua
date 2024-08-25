@@ -35,12 +35,12 @@ func luaConstructorArrayStructNewArrayStruct(L *lua.LState) int {
 
 	{
 
-		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(1), func(val0 lua.LValue) float32 {
+		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(1), 0, func(val0 lua.LValue) float32 {
 
 			v0, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(1, "argument not a float32 instance")
+				L.ArgError(1, gobindlua.CastArgError("float32", val0))
 			}
 
 			return (float32)(v0)
@@ -68,11 +68,11 @@ func (r *ArrayStruct) LuaMetatableType() string {
 
 func luaCheckArrayStruct(param int, L *lua.LState) *ArrayStruct {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*ArrayStruct); ok {
-		return v
+	v, ok := ud.Value.(*ArrayStruct)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("ArrayStruct", ud.Value))
 	}
-	L.ArgError(1, "ArrayStruct expected")
-	return nil
+	return v
 }
 
 func luaAccessArrayStruct(L *lua.LState) int {
@@ -90,7 +90,7 @@ func luaAccessArrayStruct(L *lua.LState) int {
 				t0, ok := val0.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, "argument not a float32 instance")
+					L.ArgError(3, gobindlua.CastArgError("float32", val0))
 				}
 
 				(p1.Elements)[idx0] = (float32)(t0)
@@ -120,12 +120,12 @@ func luaSetArrayStruct(L *lua.LState) int {
 	switch p2 {
 	case "elements":
 
-		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(3), func(val0 lua.LValue) float32 {
+		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(3), 0, func(val0 lua.LValue) float32 {
 
 			v0, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(3, "argument not a float32 instance")
+				L.ArgError(3, gobindlua.CastArgError("float32", val0))
 			}
 
 			return (float32)(v0)
@@ -153,12 +153,12 @@ func luaMethodArrayStructSetElements(L *lua.LState) int {
 
 	{
 
-		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(2), func(val0 lua.LValue) float32 {
+		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(2), 0, func(val0 lua.LValue) float32 {
 
 			v0, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(2, "argument not a float32 instance")
+				L.ArgError(2, gobindlua.CastArgError("float32", val0))
 			}
 
 			return (float32)(v0)
@@ -185,12 +185,12 @@ func luaMethodArrayStructSetElementsFromSubpackage(L *lua.LState) int {
 
 	{
 
-		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(2), func(val0 lua.LValue) float32 {
+		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(2), 0, func(val0 lua.LValue) float32 {
 
 			v0, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(2, "argument not a float32 instance")
+				L.ArgError(2, gobindlua.CastArgError("float32", val0))
 			}
 
 			return (float32)(v0)

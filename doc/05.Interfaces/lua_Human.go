@@ -43,11 +43,11 @@ func (r *Human) LuaMetatableType() string {
 
 func luaCheckHuman(param int, L *lua.LState) *Human {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*Human); ok {
-		return v
+	v, ok := ud.Value.(*Human)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("Human", ud.Value))
 	}
-	L.ArgError(1, "Human expected")
-	return nil
+	return v
 }
 
 func luaAccessHuman(L *lua.LState) int {

@@ -68,7 +68,7 @@ func luaFunctionSplit(L *lua.LState) int {
 			t0, ok := val0.(lua.LString)
 
 			if !ok {
-				L.ArgError(3, "argument not a string instance")
+				L.ArgError(3, gobindlua.CastArgError("string", val0))
 			}
 
 			(r0)[idx0] = (string)(t0)

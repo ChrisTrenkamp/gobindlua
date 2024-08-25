@@ -64,11 +64,11 @@ func (r *User) LuaMetatableType() string {
 
 func luaCheckUser(param int, L *lua.LState) *User {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*User); ok {
-		return v
+	v, ok := ud.Value.(*User)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("User", ud.Value))
 	}
-	L.ArgError(1, "User expected")
-	return nil
+	return v
 }
 
 func luaAccessUser(L *lua.LState) int {

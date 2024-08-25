@@ -43,11 +43,11 @@ func (r *MammalList) LuaMetatableType() string {
 
 func luaCheckMammalList(param int, L *lua.LState) *MammalList {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*MammalList); ok {
-		return v
+	v, ok := ud.Value.(*MammalList)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("MammalList", ud.Value))
 	}
-	L.ArgError(1, "MammalList expected")
-	return nil
+	return v
 }
 
 func luaAccessMammalList(L *lua.LState) int {
@@ -68,13 +68,13 @@ func luaAccessMammalList(L *lua.LState) int {
 				t0_ud, ok := val0.(*lua.LUserData)
 
 				if !ok {
-					L.ArgError(3, "UserData expected")
+					L.ArgError(3, gobindlua.TableElementCastError("Mammal", val0, 1))
 				}
 
 				t0, ok := t0_ud.Value.(Mammal)
 
 				if !ok {
-					L.ArgError(3, "Mammal expected")
+					L.ArgError(3, gobindlua.TableElementCastError("Mammal", t0_ud.Value, 1))
 				}
 
 				(p1.NonPets)[idx0] = (Mammal)(t0)
@@ -98,25 +98,25 @@ func luaSetMammalList(L *lua.LState) int {
 		ud, ok := L.CheckUserData(3).Value.(Mammal)
 
 		if !ok {
-			L.ArgError(3, "Mammal expected")
+			L.ArgError(3, gobindlua.TableElementCastError("Mammal", L.CheckUserData(3).Value, 0))
 		}
 
 		p1.Pet = ud
 
 	case "non_pets":
 
-		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[Mammal](L.CheckAny(3), func(val0 lua.LValue) Mammal {
+		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[Mammal](L.CheckAny(3), 0, func(val0 lua.LValue) Mammal {
 
 			v0_ud, ok := val0.(*lua.LUserData)
 
 			if !ok {
-				L.ArgError(3, "UserData expected")
+				L.ArgError(3, gobindlua.TableElementCastError("Mammal", val0, 1))
 			}
 
 			v0, ok := v0_ud.Value.(Mammal)
 
 			if !ok {
-				L.ArgError(3, "Mammal expected")
+				L.ArgError(3, gobindlua.TableElementCastError("Mammal", v0_ud.Value, 1))
 			}
 
 			return (Mammal)(v0)

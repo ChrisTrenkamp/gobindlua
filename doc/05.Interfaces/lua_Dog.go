@@ -43,11 +43,11 @@ func (r *Dog) LuaMetatableType() string {
 
 func luaCheckDog(param int, L *lua.LState) *Dog {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*Dog); ok {
-		return v
+	v, ok := ud.Value.(*Dog)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("Dog", ud.Value))
 	}
-	L.ArgError(1, "Dog expected")
-	return nil
+	return v
 }
 
 func luaAccessDog(L *lua.LState) int {

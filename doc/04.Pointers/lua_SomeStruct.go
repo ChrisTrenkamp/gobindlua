@@ -33,11 +33,11 @@ func (r *SomeStruct) LuaMetatableType() string {
 
 func luaCheckSomeStruct(param int, L *lua.LState) *SomeStruct {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*SomeStruct); ok {
-		return v
+	v, ok := ud.Value.(*SomeStruct)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("SomeStruct", ud.Value))
 	}
-	L.ArgError(1, "SomeStruct expected")
-	return nil
+	return v
 }
 
 func luaAccessSomeStruct(L *lua.LState) int {
@@ -54,7 +54,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 				keyVal0_n, ok := key0.(lua.LString)
 
 				if !ok {
-					L.ArgError(3, "argument not a string instance")
+					L.ArgError(3, gobindlua.TableElementCastError("string", key0, 1))
 				}
 
 				keyVal0 := string(keyVal0_n)
@@ -68,7 +68,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						keyVal1, ok := key1.(lua.LString)
 
 						if !ok {
-							L.ArgError(3, "argument not a string instance")
+							L.ArgError(3, gobindlua.CastArgError("string", key1))
 						}
 
 						ret1 := (*ret0)[(string)(keyVal1)]
@@ -81,7 +81,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 								t2, ok := val2.(lua.LString)
 
 								if !ok {
-									L.ArgError(3, "argument not a string instance")
+									L.ArgError(3, gobindlua.CastArgError("string", val2))
 								}
 
 								(*ret1)[idx2] = (string)(t2)
@@ -93,15 +93,15 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						keyVal1, ok := key1.(lua.LString)
 
 						if !ok {
-							L.ArgError(3, "argument not a string instance")
+							L.ArgError(3, gobindlua.CastArgError("string", key1))
 						}
 
-						valVal1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, func(val2 lua.LValue) string {
+						valVal1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, 2, func(val2 lua.LValue) string {
 
 							v2, ok := val2.(lua.LString)
 
 							if !ok {
-								L.ArgError(3, "argument not a string instance")
+								L.ArgError(3, gobindlua.CastArgError("string", val2))
 							}
 
 							return (string)(v2)
@@ -127,7 +127,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 									t2, ok := val2.(lua.LString)
 
 									if !ok {
-										L.ArgError(3, "argument not a string instance")
+										L.ArgError(3, gobindlua.CastArgError("string", val2))
 									}
 
 									(*ret1)[idx2] = (string)(t2)
@@ -143,25 +143,25 @@ func luaAccessSomeStruct(L *lua.LState) int {
 				keyVal0_n, ok := key0.(lua.LString)
 
 				if !ok {
-					L.ArgError(3, "argument not a string instance")
+					L.ArgError(3, gobindlua.TableElementCastError("string", key0, 1))
 				}
 
 				keyVal0 := string(keyVal0_n)
 
-				valVal0, err := gobindlua.MapLuaArrayOrTableToGoMap[string, *[]string](val0, func(key1, val1 lua.LValue) (string, *[]string) {
+				valVal0, err := gobindlua.MapLuaArrayOrTableToGoMap[string, *[]string](val0, 1, func(key1, val1 lua.LValue) (string, *[]string) {
 
 					k1, ok := key1.(lua.LString)
 
 					if !ok {
-						L.ArgError(3, "argument not a string instance")
+						L.ArgError(3, gobindlua.CastArgError("string", key1))
 					}
 
-					v1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, func(val2 lua.LValue) string {
+					v1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, 2, func(val2 lua.LValue) string {
 
 						v2, ok := val2.(lua.LString)
 
 						if !ok {
-							L.ArgError(3, "argument not a string instance")
+							L.ArgError(3, gobindlua.CastArgError("string", val2))
 						}
 
 						return (string)(v2)
@@ -193,7 +193,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 							keyVal1, ok := key1.(lua.LString)
 
 							if !ok {
-								L.ArgError(3, "argument not a string instance")
+								L.ArgError(3, gobindlua.CastArgError("string", key1))
 							}
 
 							ret1 := (*ret0)[(string)(keyVal1)]
@@ -206,7 +206,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 									t2, ok := val2.(lua.LString)
 
 									if !ok {
-										L.ArgError(3, "argument not a string instance")
+										L.ArgError(3, gobindlua.CastArgError("string", val2))
 									}
 
 									(*ret1)[idx2] = (string)(t2)
@@ -218,15 +218,15 @@ func luaAccessSomeStruct(L *lua.LState) int {
 							keyVal1, ok := key1.(lua.LString)
 
 							if !ok {
-								L.ArgError(3, "argument not a string instance")
+								L.ArgError(3, gobindlua.CastArgError("string", key1))
 							}
 
-							valVal1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, func(val2 lua.LValue) string {
+							valVal1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, 2, func(val2 lua.LValue) string {
 
 								v2, ok := val2.(lua.LString)
 
 								if !ok {
-									L.ArgError(3, "argument not a string instance")
+									L.ArgError(3, gobindlua.CastArgError("string", val2))
 								}
 
 								return (string)(v2)
@@ -252,7 +252,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 										t2, ok := val2.(lua.LString)
 
 										if !ok {
-											L.ArgError(3, "argument not a string instance")
+											L.ArgError(3, gobindlua.CastArgError("string", val2))
 										}
 
 										(*ret1)[idx2] = (string)(t2)
@@ -287,7 +287,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						t1_n, ok := val1.(lua.LNumber)
 
 						if !ok {
-							L.ArgError(3, "argument not a int instance")
+							L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
 						}
 
 						t1 := int(t1_n)
@@ -298,12 +298,12 @@ func luaAccessSomeStruct(L *lua.LState) int {
 			},
 			SetIndex: func(idx0 int, val0 lua.LValue) {
 
-				t0, err := gobindlua.MapLuaArrayOrTableToGoSlice[*int](val0, func(val1 lua.LValue) *int {
+				t0, err := gobindlua.MapLuaArrayOrTableToGoSlice[*int](val0, 1, func(val1 lua.LValue) *int {
 
 					v1_n, ok := val1.(lua.LNumber)
 
 					if !ok {
-						L.ArgError(3, "argument not a int instance")
+						L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
 					}
 
 					v1 := int(v1_n)
@@ -333,13 +333,13 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						t1_ud, ok := val1.(*lua.LUserData)
 
 						if !ok {
-							L.ArgError(3, "UserData expected")
+							L.ArgError(3, gobindlua.TableElementCastError("Sub", val1, 2))
 						}
 
 						t1, ok := t1_ud.Value.(*Sub)
 
 						if !ok {
-							L.ArgError(3, "Sub expected")
+							L.ArgError(3, gobindlua.TableElementCastError("Sub", t1_ud.Value, 2))
 						}
 
 						((*p1.E)[idx0])[idx1] = (*Sub)(t1)
@@ -348,18 +348,18 @@ func luaAccessSomeStruct(L *lua.LState) int {
 			},
 			SetIndex: func(idx0 int, val0 lua.LValue) {
 
-				t0, err := gobindlua.MapLuaArrayOrTableToGoSlice[*Sub](val0, func(val1 lua.LValue) *Sub {
+				t0, err := gobindlua.MapLuaArrayOrTableToGoSlice[*Sub](val0, 1, func(val1 lua.LValue) *Sub {
 
 					v1_ud, ok := val1.(*lua.LUserData)
 
 					if !ok {
-						L.ArgError(3, "UserData expected")
+						L.ArgError(3, gobindlua.TableElementCastError("Sub", val1, 2))
 					}
 
 					v1, ok := v1_ud.Value.(*Sub)
 
 					if !ok {
-						L.ArgError(3, "Sub expected")
+						L.ArgError(3, gobindlua.TableElementCastError("Sub", v1_ud.Value, 2))
 					}
 
 					return (*Sub)(v1)
@@ -386,13 +386,13 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						keyVal1_ud, ok := key1.(*lua.LUserData)
 
 						if !ok {
-							L.ArgError(3, "UserData expected")
+							L.ArgError(3, gobindlua.TableElementCastError("Sub", key1, 2))
 						}
 
 						keyVal1, ok := keyVal1_ud.Value.(*Sub)
 
 						if !ok {
-							L.ArgError(3, "Sub expected")
+							L.ArgError(3, gobindlua.TableElementCastError("Sub", keyVal1_ud.Value, 2))
 						}
 
 						ret1 := ((p1.F)[idx0])[(*Sub)(keyVal1)]
@@ -403,19 +403,19 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						keyVal1_ud, ok := key1.(*lua.LUserData)
 
 						if !ok {
-							L.ArgError(3, "UserData expected")
+							L.ArgError(3, gobindlua.TableElementCastError("Sub", key1, 2))
 						}
 
 						keyVal1, ok := keyVal1_ud.Value.(*Sub)
 
 						if !ok {
-							L.ArgError(3, "Sub expected")
+							L.ArgError(3, gobindlua.TableElementCastError("Sub", keyVal1_ud.Value, 2))
 						}
 
 						valVal1_n, ok := val1.(lua.LNumber)
 
 						if !ok {
-							L.ArgError(3, "argument not a int instance")
+							L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
 						}
 
 						valVal1 := int(valVal1_n)
@@ -435,24 +435,24 @@ func luaAccessSomeStruct(L *lua.LState) int {
 			},
 			SetIndex: func(idx0 int, val0 lua.LValue) {
 
-				t0, err := gobindlua.MapLuaArrayOrTableToGoMap[*Sub, *int](val0, func(key1, val1 lua.LValue) (*Sub, *int) {
+				t0, err := gobindlua.MapLuaArrayOrTableToGoMap[*Sub, *int](val0, 1, func(key1, val1 lua.LValue) (*Sub, *int) {
 
 					k1_ud, ok := key1.(*lua.LUserData)
 
 					if !ok {
-						L.ArgError(3, "UserData expected")
+						L.ArgError(3, gobindlua.TableElementCastError("Sub", key1, 2))
 					}
 
 					k1, ok := k1_ud.Value.(*Sub)
 
 					if !ok {
-						L.ArgError(3, "Sub expected")
+						L.ArgError(3, gobindlua.TableElementCastError("Sub", k1_ud.Value, 2))
 					}
 
 					v1_n, ok := val1.(lua.LNumber)
 
 					if !ok {
-						L.ArgError(3, "argument not a int instance")
+						L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
 					}
 
 					v1 := int(v1_n)
@@ -482,30 +482,30 @@ func luaSetSomeStruct(L *lua.LState) int {
 	switch p2 {
 	case "a":
 
-		ud, err := gobindlua.MapLuaArrayOrTableToGoMap[*string, *map[string]*[]string](L.CheckAny(3), func(key0, val0 lua.LValue) (*string, *map[string]*[]string) {
+		ud, err := gobindlua.MapLuaArrayOrTableToGoMap[*string, *map[string]*[]string](L.CheckAny(3), 0, func(key0, val0 lua.LValue) (*string, *map[string]*[]string) {
 
 			k0_n, ok := key0.(lua.LString)
 
 			if !ok {
-				L.ArgError(3, "argument not a string instance")
+				L.ArgError(3, gobindlua.TableElementCastError("string", key0, 1))
 			}
 
 			k0 := string(k0_n)
 
-			v0, err := gobindlua.MapLuaArrayOrTableToGoMap[string, *[]string](val0, func(key1, val1 lua.LValue) (string, *[]string) {
+			v0, err := gobindlua.MapLuaArrayOrTableToGoMap[string, *[]string](val0, 1, func(key1, val1 lua.LValue) (string, *[]string) {
 
 				k1, ok := key1.(lua.LString)
 
 				if !ok {
-					L.ArgError(3, "argument not a string instance")
+					L.ArgError(3, gobindlua.CastArgError("string", key1))
 				}
 
-				v1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, func(val2 lua.LValue) string {
+				v1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, 2, func(val2 lua.LValue) string {
 
 					v2, ok := val2.(lua.LString)
 
 					if !ok {
-						L.ArgError(3, "argument not a string instance")
+						L.ArgError(3, gobindlua.CastArgError("string", val2))
 					}
 
 					return (string)(v2)
@@ -536,7 +536,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 		ud, ok := L.CheckUserData(3).Value.(*Sub)
 
 		if !ok {
-			L.ArgError(3, "Sub expected")
+			L.ArgError(3, gobindlua.CastArgError("Sub", L.CheckUserData(3)))
 		}
 
 		p1.B = ud
@@ -546,21 +546,21 @@ func luaSetSomeStruct(L *lua.LState) int {
 		ud, ok := L.CheckUserData(3).Value.(*Sub)
 
 		if !ok {
-			L.ArgError(3, "Sub expected")
+			L.ArgError(3, gobindlua.CastArgError("Sub", L.CheckUserData(3)))
 		}
 
 		p1.C = *ud
 
 	case "d":
 
-		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[*[]*int](L.CheckAny(3), func(val0 lua.LValue) *[]*int {
+		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[*[]*int](L.CheckAny(3), 0, func(val0 lua.LValue) *[]*int {
 
-			v0, err := gobindlua.MapLuaArrayOrTableToGoSlice[*int](val0, func(val1 lua.LValue) *int {
+			v0, err := gobindlua.MapLuaArrayOrTableToGoSlice[*int](val0, 1, func(val1 lua.LValue) *int {
 
 				v1_n, ok := val1.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, "argument not a int instance")
+					L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
 				}
 
 				v1 := int(v1_n)
@@ -583,20 +583,20 @@ func luaSetSomeStruct(L *lua.LState) int {
 
 	case "e":
 
-		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[[]*Sub](L.CheckAny(3), func(val0 lua.LValue) []*Sub {
+		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[[]*Sub](L.CheckAny(3), 0, func(val0 lua.LValue) []*Sub {
 
-			v0, err := gobindlua.MapLuaArrayOrTableToGoSlice[*Sub](val0, func(val1 lua.LValue) *Sub {
+			v0, err := gobindlua.MapLuaArrayOrTableToGoSlice[*Sub](val0, 1, func(val1 lua.LValue) *Sub {
 
 				v1_ud, ok := val1.(*lua.LUserData)
 
 				if !ok {
-					L.ArgError(3, "UserData expected")
+					L.ArgError(3, gobindlua.TableElementCastError("Sub", val1, 2))
 				}
 
 				v1, ok := v1_ud.Value.(*Sub)
 
 				if !ok {
-					L.ArgError(3, "Sub expected")
+					L.ArgError(3, gobindlua.TableElementCastError("Sub", v1_ud.Value, 2))
 				}
 
 				return (*Sub)(v1)
@@ -617,26 +617,26 @@ func luaSetSomeStruct(L *lua.LState) int {
 
 	case "f":
 
-		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[map[*Sub]*int](L.CheckAny(3), func(val0 lua.LValue) map[*Sub]*int {
+		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[map[*Sub]*int](L.CheckAny(3), 0, func(val0 lua.LValue) map[*Sub]*int {
 
-			v0, err := gobindlua.MapLuaArrayOrTableToGoMap[*Sub, *int](val0, func(key1, val1 lua.LValue) (*Sub, *int) {
+			v0, err := gobindlua.MapLuaArrayOrTableToGoMap[*Sub, *int](val0, 1, func(key1, val1 lua.LValue) (*Sub, *int) {
 
 				k1_ud, ok := key1.(*lua.LUserData)
 
 				if !ok {
-					L.ArgError(3, "UserData expected")
+					L.ArgError(3, gobindlua.TableElementCastError("Sub", key1, 2))
 				}
 
 				k1, ok := k1_ud.Value.(*Sub)
 
 				if !ok {
-					L.ArgError(3, "Sub expected")
+					L.ArgError(3, gobindlua.TableElementCastError("Sub", k1_ud.Value, 2))
 				}
 
 				v1_n, ok := val1.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, "argument not a int instance")
+					L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
 				}
 
 				v1 := int(v1_n)

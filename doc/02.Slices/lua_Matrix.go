@@ -34,14 +34,14 @@ func luaConstructorMatrixNewMatrixFrom(L *lua.LState) int {
 
 	{
 
-		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[[]float64](L.CheckAny(1), func(val0 lua.LValue) []float64 {
+		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[[]float64](L.CheckAny(1), 0, func(val0 lua.LValue) []float64 {
 
-			v0, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](val0, func(val1 lua.LValue) float64 {
+			v0, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](val0, 1, func(val1 lua.LValue) float64 {
 
 				v1, ok := val1.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(1, "argument not a float64 instance")
+					L.ArgError(1, gobindlua.CastArgError("float64", val1))
 				}
 
 				return (float64)(v1)
@@ -74,11 +74,11 @@ func (r *Matrix) LuaMetatableType() string {
 
 func luaCheckMatrix(param int, L *lua.LState) *Matrix {
 	ud := L.CheckUserData(param)
-	if v, ok := ud.Value.(*Matrix); ok {
-		return v
+	v, ok := ud.Value.(*Matrix)
+	if !ok {
+		L.ArgError(1, gobindlua.CastArgError("Matrix", ud.Value))
 	}
-	L.ArgError(1, "Matrix expected")
-	return nil
+	return v
 }
 
 func luaAccessMatrix(L *lua.LState) int {
@@ -100,7 +100,7 @@ func luaAccessMatrix(L *lua.LState) int {
 						t1, ok := val1.(lua.LNumber)
 
 						if !ok {
-							L.ArgError(3, "argument not a float64 instance")
+							L.ArgError(3, gobindlua.CastArgError("float64", val1))
 						}
 
 						((p1.Elements)[idx0])[idx1] = (float64)(t1)
@@ -109,12 +109,12 @@ func luaAccessMatrix(L *lua.LState) int {
 			},
 			SetIndex: func(idx0 int, val0 lua.LValue) {
 
-				t0, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](val0, func(val1 lua.LValue) float64 {
+				t0, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](val0, 1, func(val1 lua.LValue) float64 {
 
 					v1, ok := val1.(lua.LNumber)
 
 					if !ok {
-						L.ArgError(3, "argument not a float64 instance")
+						L.ArgError(3, gobindlua.CastArgError("float64", val1))
 					}
 
 					return (float64)(v1)
@@ -145,14 +145,14 @@ func luaSetMatrix(L *lua.LState) int {
 	switch p2 {
 	case "elements":
 
-		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[[]float64](L.CheckAny(3), func(val0 lua.LValue) []float64 {
+		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[[]float64](L.CheckAny(3), 0, func(val0 lua.LValue) []float64 {
 
-			v0, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](val0, func(val1 lua.LValue) float64 {
+			v0, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](val0, 1, func(val1 lua.LValue) float64 {
 
 				v1, ok := val1.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, "argument not a float64 instance")
+					L.ArgError(3, gobindlua.CastArgError("float64", val1))
 				}
 
 				return (float64)(v1)
