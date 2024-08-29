@@ -129,7 +129,7 @@ func (g *StructGenerator) gatherConstructors() []functiontype.FunctionType {
 
 	for _, syn := range g.packageSource.Syntax {
 		for _, dec := range syn.Decls {
-			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Type.Results != nil {
+			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Type.Results != nil && fn.Recv == nil {
 				for _, retType := range fn.Type.Results.List {
 					retType := datatype.CreateDataTypeFromExpr(retType.Type, g.packageSource, g.allDeclaredInterfaces)
 

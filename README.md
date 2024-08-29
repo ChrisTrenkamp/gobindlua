@@ -33,6 +33,7 @@ Func (s SomeStruct) Join() string {
 ... this will generate a file called `lua_SomeStruct.go`.  The generated bindings will work seamlessly with Lua tables:
 
 ```lua
+local some_struct = require "some_struct"
 local my_struct = some_struct.new({"foo", "bar", "eggs", "ham"})
 print(my_struct:join()) --[[ foo, bar, eggs, ham ]]
 ```
