@@ -128,6 +128,10 @@ func (g *StructGenerator) gatherConstructors() []functiontype.FunctionType {
 	constructorPrefix := "New" + g.structToGenerate
 
 	for _, syn := range g.packageSource.Syntax {
+		if gobindluautil.IsGobindLuaFile(syn) {
+			continue
+		}
+
 		for _, dec := range syn.Decls {
 			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Type.Results != nil && fn.Recv == nil {
 				for _, retType := range fn.Type.Results.List {
@@ -135,10 +139,6 @@ func (g *StructGenerator) gatherConstructors() []functiontype.FunctionType {
 
 					if retType.Type.Underlying() == underylingStructType {
 						fnName := fn.Name.Name
-
-						if strings.HasPrefix(fnName, "luaCheck") {
-							continue
-						}
 
 						if gobindluautil.HasFilters(g.includeFunctions, g.excludeFunctions) {
 							if !gobindluautil.CheckInclude(fnName, g.includeFunctions, g.excludeFunctions) {
@@ -172,13 +172,13 @@ func (g *StructGenerator) gatherReceivers() []functiontype.FunctionType {
 	underylingStructType := g.structObject.Type().Underlying()
 
 	for _, syn := range g.packageSource.Syntax {
+		if gobindluautil.IsGobindLuaFile(syn) {
+			continue
+		}
+
 		for _, dec := range syn.Decls {
 			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Recv != nil {
 				fnName := fn.Name.Name
-
-				if fnName == "LuaModuleName" || fnName == "LuaRegisterGlobalMetatable" || fnName == "LuaModuleLoader" || fnName == "LuaMetatableType" {
-					continue
-				}
 
 				if gobindluautil.HasFilters(g.includeFunctions, g.excludeFunctions) {
 					if !gobindluautil.CheckInclude(fnName, g.includeFunctions, g.excludeFunctions) {
