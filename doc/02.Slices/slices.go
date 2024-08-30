@@ -12,14 +12,17 @@ type Vector struct {
 	Elements []float64
 }
 
+//gobindlua:constructor
 func NewVectorFrom(elems []float64) Vector {
 	return Vector{Elements: elems}
 }
 
+//gobindlua:constructor
 func NewVectorVariadic(elems ...float64) Vector {
 	return Vector{Elements: elems}
 }
 
+//gobindlua:function
 func (v Vector) InnerProduct(o Vector) (float64, error) {
 	if len(v.Elements) != len(o.Elements) {
 		return 0, fmt.Errorf("vector lengths not equal")
@@ -34,6 +37,7 @@ func (v Vector) InnerProduct(o Vector) (float64, error) {
 	return ret, nil
 }
 
+//gobindlua:function
 func (v Vector) OuterProduct(o Vector) (Matrix, error) {
 	ret := make([][]float64, 0)
 
@@ -57,20 +61,24 @@ type ArrayStruct struct {
 	Elements [ArrSize]float32
 }
 
+//gobindlua:constructor
 func NewArrayStruct(elems [3]float32) ArrayStruct {
 	return ArrayStruct{Elements: elems}
 }
 
+//gobindlua:function
 func (s *ArrayStruct) SetElements(j [3]float32) {
 	s.Elements = j
 }
 
+//gobindlua:function
 func (s *ArrayStruct) SetElementsFromSubpackage(j *slicessubpackage.AnArray) {
 	s.Elements[0] = j[0]
 	s.Elements[1] = j[1]
 	s.Elements[2] = j[2]
 }
 
+//gobindlua:function
 func (s ArrayStruct) String() string {
 	return fmt.Sprintf("{%f, %f, %f}", s.Elements[0], s.Elements[1], s.Elements[2])
 }
@@ -80,10 +88,12 @@ type Matrix struct {
 	Elements [][]float64
 }
 
+//gobindlua:constructor
 func NewMatrixFrom(elems [][]float64) Matrix {
 	return Matrix{Elements: elems}
 }
 
+//gobindlua:function
 func (m Matrix) String() string {
 	ret := ""
 

@@ -19,13 +19,15 @@ type SomeStruct struct {
     SomeStrings []string
 }
 
+//gobindlua:constructor
 func NewSomeStruct(strs []string) SomeStruct {
     return SomeStruct {
         SomeStrings: strs,
     }
 }
 
-Func (s SomeStruct) Join() string {
+//gobindlua:function
+func (s SomeStruct) Join() string {
     return strings.Join(s.SomeStrings, ", ")
 }
 ```

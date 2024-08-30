@@ -7,7 +7,6 @@ import (
 	"go/ast"
 	"io"
 	"text/template"
-	"unicode"
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/functiontype"
@@ -24,8 +23,6 @@ type PackageGenerator struct {
 	wd                string
 	pathToOutput      string
 	dependantModules  []string
-	includeFunctions  []string
-	excludeFunctions  []string
 
 	packageSource         *packages.Package
 	allDeclaredInterfaces []declaredinterface.DeclaredInterface
@@ -34,14 +31,12 @@ type PackageGenerator struct {
 	imports         gblimports.Imports
 }
 
-func NewPackageGenerator(packageToGenerate, wd, pathToOutput string, dependantModules []string, includeFunctions, excludeFunctions []string) *PackageGenerator {
+func NewPackageGenerator(packageToGenerate, wd, pathToOutput string, dependantModules []string) *PackageGenerator {
 	return &PackageGenerator{
 		packageToGenerate: packageToGenerate,
 		wd:                wd,
 		pathToOutput:      pathToOutput,
 		dependantModules:  dependantModules,
-		includeFunctions:  includeFunctions,
-		excludeFunctions:  excludeFunctions,
 	}
 }
 
@@ -80,14 +75,10 @@ func (g *PackageGenerator) gatherAllFunctions() []functiontype.FunctionType {
 
 	for _, syn := range g.packageSource.Syntax {
 		for _, dec := range syn.Decls {
-			if fn, ok := dec.(*ast.FuncDecl); ok {
+			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Recv == nil {
 				fnName := fn.Name.Name
 
-				if gobindluautil.HasFilters(g.includeFunctions, g.excludeFunctions) {
-					if !gobindluautil.CheckInclude(fnName, g.includeFunctions, g.excludeFunctions) {
-						continue
-					}
-				} else if !unicode.IsUpper(rune(fnName[0])) || g.PackageToGenerateFunctionName() == fnName {
+				if !gobindluautil.HasGoBindLuaDirective(fn, "function") {
 					continue
 				}
 

@@ -15,6 +15,7 @@ type Sub struct {
 	Str *string
 }
 
+//gobindlua:constructor
 func NewSub(str *string) *Sub {
 	return &Sub{
 		Str: str,

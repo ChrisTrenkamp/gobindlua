@@ -136,11 +136,19 @@ func containsGobindLuaDirective(genDecl *ast.GenDecl) bool {
 func IsGobindLuaFile(genDecl *ast.File) bool {
 	doc := genDecl.Doc
 
-	if doc == nil {
-		return false
+	if doc != nil && strings.TrimSpace(doc.Text()) == GEN_HEADER {
+		return true
 	}
 
-	return strings.TrimSpace(doc.Text()) == GEN_HEADER
+	comments := genDecl.Comments
+
+	for _, i := range comments {
+		if strings.TrimSpace(i.Text()) == GEN_HEADER {
+			return true
+		}
+	}
+
+	return false
 }
 
 func HasFilters(includeFunctions, excludeFunctions []string) bool {
@@ -157,4 +165,22 @@ func CheckInclude(str string, includeFunctions, excludeFunctions []string) bool 
 	}
 
 	return true
+}
+
+func HasGoBindLuaDirective(n *ast.FuncDecl, typ string) bool {
+	const Directive = "//gobindlua:"
+
+	if n.Doc != nil {
+		for _, i := range n.Doc.List {
+			if !strings.HasPrefix(i.Text, Directive) {
+				continue
+			}
+
+			comm := i.Text[len(Directive):]
+
+			return typ == comm
+		}
+	}
+
+	return false
 }

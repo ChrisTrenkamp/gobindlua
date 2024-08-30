@@ -12,18 +12,21 @@ type UserDatabase struct {
 	Users map[int]User
 }
 
+//gobindlua:constructor
 func NewUserDatabase() UserDatabase {
 	return UserDatabase{
 		Users: make(map[int]User),
 	}
 }
 
+//gobindlua:constructor
 func NewUserDatabaseFrom(users map[int]User) UserDatabase {
 	return UserDatabase{
 		Users: users,
 	}
 }
 
+//gobindlua:constructor
 func NewUser(name string, age int, email string) User {
 	return User{
 		Name:  name,

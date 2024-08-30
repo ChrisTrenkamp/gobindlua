@@ -111,14 +111,10 @@ func numNotEmpty(str ...*string) int {
 }
 
 func main() {
-	includeFunctions := make(flagArray, 0)
-	excludeFunctions := make(flagArray, 0)
 	workingDir := flag.String("d", "", "The Go source directory to generate the bindings from. Uses the current working directory if empty.")
 	structToGenerate := flag.String("struct", "", "Generate GopherLua bindings and Lua definitions for the given struct.")
 	packageToGenerate := flag.String("package", "", "Generate GopherLua bindings and Lua definitions for the given package.")
 	interfaceToGenerate := flag.String("interface", "", "Generate Lua definitions for the given interface.")
-	flag.Var(&includeFunctions, "i", "Only include the given function or method names.")
-	flag.Var(&excludeFunctions, "x", "Exclude the given function or method names.")
 
 	flag.Parse()
 
@@ -134,10 +130,6 @@ func main() {
 
 	if numNotEmpty(structToGenerate, packageToGenerate, interfaceToGenerate) != 1 {
 		log.Fatal("only one of -struct, -package, or -interface may be specified")
-	}
-
-	if len(includeFunctions) > 0 && len(excludeFunctions) > 0 {
-		log.Fatal("only one of -i or -x may be specified")
 	}
 
 	if *workingDir == "" {
@@ -171,8 +163,6 @@ func main() {
 			*workingDir,
 			basePathToOutput+".go",
 			dependantModules,
-			includeFunctions,
-			excludeFunctions,
 		)
 		goBytes, luaDefBytes, err = gen.GenerateSourceCode()
 	} else if *packageToGenerate != "" {
@@ -180,8 +170,6 @@ func main() {
 			*packageToGenerate,
 			*workingDir,
 			basePathToOutput+".go", dependantModules,
-			includeFunctions,
-			excludeFunctions,
 		)
 		goBytes, luaDefBytes, err = gen.GenerateSourceCode()
 	} else if *interfaceToGenerate != "" {

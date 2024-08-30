@@ -9,7 +9,6 @@ import (
 	"io"
 	"strings"
 	"text/template"
-	"unicode"
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
@@ -27,8 +26,6 @@ type StructGenerator struct {
 	wd               string
 	pathToOutput     string
 	dependantModules []string
-	includeFunctions []string
-	excludeFunctions []string
 
 	packageSource         *packages.Package
 	allDeclaredInterfaces []declaredinterface.DeclaredInterface
@@ -40,14 +37,12 @@ type StructGenerator struct {
 	imports         gblimports.Imports
 }
 
-func NewStructGenerator(structToGenerate, wd, pathToOutput string, dependantModules []string, includeFunctions, excludeFunctions []string) *StructGenerator {
+func NewStructGenerator(structToGenerate, wd, pathToOutput string, dependantModules []string) *StructGenerator {
 	return &StructGenerator{
 		structToGenerate: structToGenerate,
 		wd:               wd,
 		pathToOutput:     pathToOutput,
 		dependantModules: dependantModules,
-		includeFunctions: includeFunctions,
-		excludeFunctions: excludeFunctions,
 	}
 }
 
@@ -140,11 +135,7 @@ func (g *StructGenerator) gatherConstructors() []functiontype.FunctionType {
 					if retType.Type.Underlying() == underylingStructType {
 						fnName := fn.Name.Name
 
-						if gobindluautil.HasFilters(g.includeFunctions, g.excludeFunctions) {
-							if !gobindluautil.CheckInclude(fnName, g.includeFunctions, g.excludeFunctions) {
-								continue
-							}
-						} else if !strings.HasPrefix(fnName, constructorPrefix) {
+						if !gobindluautil.HasGoBindLuaDirective(fn, "constructor") {
 							continue
 						}
 
@@ -180,11 +171,7 @@ func (g *StructGenerator) gatherReceivers() []functiontype.FunctionType {
 			if fn, ok := dec.(*ast.FuncDecl); ok && fn.Recv != nil {
 				fnName := fn.Name.Name
 
-				if gobindluautil.HasFilters(g.includeFunctions, g.excludeFunctions) {
-					if !gobindluautil.CheckInclude(fnName, g.includeFunctions, g.excludeFunctions) {
-						continue
-					}
-				} else if !unicode.IsUpper(rune(fnName[0])) {
+				if !gobindluautil.HasGoBindLuaDirective(fn, "function") {
 					continue
 				}
 
