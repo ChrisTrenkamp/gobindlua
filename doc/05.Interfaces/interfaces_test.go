@@ -4,6 +4,10 @@ import (
 	"log"
 
 	"github.com/ChrisTrenkamp/gobindlua"
+	"github.com/ChrisTrenkamp/gobindlua/doc/05.Interfaces/dog"
+	"github.com/ChrisTrenkamp/gobindlua/doc/05.Interfaces/human"
+	"github.com/ChrisTrenkamp/gobindlua/doc/05.Interfaces/lion"
+	"github.com/ChrisTrenkamp/gobindlua/doc/05.Interfaces/mammallist"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -28,7 +32,7 @@ func Example() {
 	L := lua.NewState()
 	defer L.Close()
 
-	gobindlua.Register(L, &Dog{}, &Lion{}, &Human{}, &MammalList{})
+	gobindlua.Register(L, &dog.Dog{}, &lion.Lion{}, &human.Human{}, &mammallist.MammalList{})
 
 	if err := L.DoString(script); err != nil {
 		log.Fatal(err)

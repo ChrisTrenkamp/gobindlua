@@ -6,6 +6,9 @@ import (
 	"log"
 
 	"github.com/ChrisTrenkamp/gobindlua"
+	"github.com/ChrisTrenkamp/gobindlua/doc/02.Slices/array"
+	"github.com/ChrisTrenkamp/gobindlua/doc/02.Slices/matrix"
+	"github.com/ChrisTrenkamp/gobindlua/doc/02.Slices/vector"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -77,9 +80,9 @@ func Example() {
 	L := lua.NewState()
 	defer L.Close()
 
-	gobindlua.Register(L, &Vector{}, &ArrayStruct{}, &Matrix{})
+	gobindlua.Register(L, &vector.Vector{}, &array.ArrayStruct{}, &matrix.Matrix{})
 
-	matrix := Matrix{}
+	matrix := matrix.Matrix{}
 	L.SetGlobal("m", gobindlua.NewUserData(&matrix, L))
 
 	if err := L.DoString(script); err != nil {
