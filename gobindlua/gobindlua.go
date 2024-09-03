@@ -16,17 +16,6 @@ import (
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/structgen"
 )
 
-type flagArray []string
-
-func (i *flagArray) String() string {
-	return ""
-}
-
-func (i *flagArray) Set(value string) error {
-	*i = append(*i, value)
-	return nil
-}
-
 var errStructOrPackageUnspecified = fmt.Errorf("-s or -p must be specified")
 var errIncorrectGoGeneratePlacement = fmt.Errorf("go:generate gobindlua directives must be placed behind a struct or package declaration")
 
