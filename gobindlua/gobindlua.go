@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/interfacegen"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/packagegen"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/structgen"
@@ -18,10 +19,10 @@ import (
 
 var errStructOrPackageUnspecified = fmt.Errorf("-s or -p must be specified")
 var errIncorrectGoGeneratePlacement = fmt.Errorf("go:generate gobindlua directives must be placed behind a struct or package declaration")
+var gofile = os.Getenv("GOFILE")
 
 func determineFromGoLine(structToGenerate, packageToGenerate, interfaceToGenerate *string) error {
 	lineStr := os.Getenv("GOLINE")
-	gofile := os.Getenv("GOFILE")
 
 	if lineStr == "" || gofile == "" {
 		return errStructOrPackageUnspecified
@@ -131,15 +132,15 @@ func main() {
 
 	dependantModules, err := findGobindLuaConf(*workingDir)
 
-	outFile := ""
+	outFile := strings.TrimSuffix(filepath.Base(gofile), ".go")
 
 	if *structToGenerate != "" {
-		outFile = "lua_" + *structToGenerate
-	} else if *packageToGenerate != "" {
-		outFile = "lua_" + filepath.Base(*packageToGenerate)
-	} else {
-		outFile = "lua_" + *interfaceToGenerate
+		outFile += "_" + *structToGenerate
+	} else if *interfaceToGenerate != "" {
+		outFile += "_" + *interfaceToGenerate
 	}
+
+	outFile += "_lua_bindings"
 
 	basePathToOutput := filepath.Join(*workingDir, outFile)
 
@@ -168,14 +169,14 @@ func main() {
 
 	if len(goBytes) > 0 {
 		outPath := basePathToOutput + ".go"
-		if werr := os.WriteFile(outPath, goBytes, 0644); werr != nil {
+		if werr := writeToFile(outPath, goBytes); werr != nil {
 			log.Fatal(werr)
 		}
 	}
 
 	if len(luaDefBytes) > 0 {
-		outPath := basePathToOutput + "_definitions.lua"
-		if werr := os.WriteFile(outPath, luaDefBytes, 0644); werr != nil {
+		outPath := basePathToOutput + ".lua"
+		if werr := writeToFile(outPath, luaDefBytes); werr != nil {
 			log.Fatal(werr)
 		}
 	}
@@ -183,6 +184,22 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func writeToFile(outPath string, content []byte) error {
+	origContents, err := os.ReadFile(outPath)
+
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	str := string(bytes.Split(origContents, []byte("\n"))[0])
+
+	if str != "" && !strings.Contains(str, gobindluautil.GEN_HEADER) {
+		return fmt.Errorf("%s does not have the gobindlua header and will not overwrite", outPath)
+	}
+
+	return os.WriteFile(outPath, content, 0644)
 }
 
 func findGobindLuaConf(wd string) ([]string, error) {

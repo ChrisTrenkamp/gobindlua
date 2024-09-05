@@ -763,11 +763,11 @@ func (d *DataType) LuaType(isFunctionReturn bool) string {
 		*/
 		return fmt.Sprintf("table<%s,%s>", key.LuaType(isFunctionReturn), val.LuaType(isFunctionReturn))
 	case *types.Struct:
-		return gobindluautil.StructFieldMetadataName(d.declaredGoType())
+		return gobindluautil.StructFieldMetadataName(d.declaredGoTypeWithoutPackage())
 	case *types.Interface:
 		for _, i := range d.allDeclaredInterfaces {
 			if types.Identical(t, i.Interface) {
-				return gobindluautil.StructOrInterfaceMetadataName(d.declaredGoType())
+				return gobindluautil.StructOrInterfaceMetadataName(d.declaredGoTypeWithoutPackage())
 			}
 		}
 
@@ -775,4 +775,15 @@ func (d *DataType) LuaType(isFunctionReturn bool) string {
 	}
 
 	return "UNSUPPORTED_TYPE"
+}
+
+func (d *DataType) declaredGoTypeWithoutPackage() string {
+	pkg := d.declaredGoType()
+	spl := strings.SplitN(pkg, ".", 2)
+
+	if len(spl) == 2 {
+		return spl[1]
+	}
+
+	return pkg
 }

@@ -12,6 +12,7 @@
 //go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua@*version*
 type Joiner interface {
     Join() string
+	gobindlua.LuaUserData
 }
 
 //go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua@*version*
