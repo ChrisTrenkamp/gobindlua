@@ -37,13 +37,15 @@ func luaConstructorVectorNewVectorFrom(L *lua.LState) int {
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](L.CheckAny(1), 0, func(val0 lua.LValue) float64 {
 
-			v0, ok := val0.(lua.LNumber)
+			v0_n, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(1, gobindlua.CastArgError("float64", val0))
+				gobindlua.TableElemCastError(L, 1, "float64", val0)
 			}
 
-			return (float64)(v0)
+			v0 := float64(v0_n)
+
+			return v0
 		})
 
 		if err != nil {
@@ -68,13 +70,15 @@ func luaConstructorVectorNewVectorVariadic(L *lua.LState) int {
 
 		ud, err := gobindlua.MapVariadicArgsToGoSlice[float64](1, L, func(val0 lua.LValue) float64 {
 
-			v0, ok := val0.(lua.LNumber)
+			v0_n, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(1, gobindlua.CastArgError("float64", val0))
+				gobindlua.TableElemCastError(L, 1, "float64", val0)
 			}
 
-			return (float64)(v0)
+			v0 := float64(v0_n)
+
+			return v0
 		})
 
 		if err != nil {
@@ -99,7 +103,7 @@ func luaCheckVector(param int, L *lua.LState) *Vector {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*Vector)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("Vector", ud.Value))
+		gobindlua.CastArgError(L, 1, "Vector", ud.Value)
 	}
 	return v
 }
@@ -116,13 +120,15 @@ func luaAccessVector(L *lua.LState) int {
 			Index: func(idx0 int) lua.LValue { return (lua.LNumber)((p1.Elements)[idx0]) },
 			SetIndex: func(idx0 int, val0 lua.LValue) {
 
-				t0, ok := val0.(lua.LNumber)
+				t0_n, ok := val0.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, gobindlua.CastArgError("float64", val0))
+					gobindlua.TableElemCastError(L, 1, "float64", val0)
 				}
 
-				(p1.Elements)[idx0] = (float64)(t0)
+				t0 := float64(t0_n)
+
+				(p1.Elements)[idx0] = t0
 			},
 		}, L))
 
@@ -148,13 +154,15 @@ func luaSetVector(L *lua.LState) int {
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](L.CheckAny(3), 0, func(val0 lua.LValue) float64 {
 
-			v0, ok := val0.(lua.LNumber)
+			v0_n, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(3, gobindlua.CastArgError("float64", val0))
+				gobindlua.TableElemCastError(L, 1, "float64", val0)
 			}
 
-			return (float64)(v0)
+			v0 := float64(v0_n)
+
+			return v0
 		})
 
 		if err != nil {
@@ -180,7 +188,7 @@ func luaMethodVectorInnerProduct(L *lua.LState) int {
 		ud, ok := L.CheckUserData(2).Value.(*Vector)
 
 		if !ok {
-			L.ArgError(3, gobindlua.CastArgError("Vector", L.CheckUserData(2)))
+			gobindlua.CastArgError(L, 3, "Vector", L.CheckUserData(2))
 		}
 
 		p0 = *ud
@@ -207,7 +215,7 @@ func luaMethodVectorOuterProduct(L *lua.LState) int {
 		ud, ok := L.CheckUserData(2).Value.(*Vector)
 
 		if !ok {
-			L.ArgError(3, gobindlua.CastArgError("Vector", L.CheckUserData(2)))
+			gobindlua.CastArgError(L, 3, "Vector", L.CheckUserData(2))
 		}
 
 		p0 = *ud

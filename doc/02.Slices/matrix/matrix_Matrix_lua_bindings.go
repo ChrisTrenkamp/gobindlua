@@ -38,20 +38,22 @@ func luaConstructorMatrixNewMatrixFrom(L *lua.LState) int {
 
 			v0, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](val0, 1, func(val1 lua.LValue) float64 {
 
-				v1, ok := val1.(lua.LNumber)
+				v1_n, ok := val1.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(1, gobindlua.CastArgError("float64", val1))
+					gobindlua.TableElemCastError(L, 2, "float64", val1)
 				}
 
-				return (float64)(v1)
+				v1 := float64(v1_n)
+
+				return v1
 			})
 
 			if err != nil {
 				L.ArgError(1, err.Error())
 			}
 
-			return ([]float64)(v0)
+			return v0
 		})
 
 		if err != nil {
@@ -76,7 +78,7 @@ func luaCheckMatrix(param int, L *lua.LState) *Matrix {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*Matrix)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("Matrix", ud.Value))
+		gobindlua.CastArgError(L, 1, "Matrix", ud.Value)
 	}
 	return v
 }
@@ -97,13 +99,15 @@ func luaAccessMatrix(L *lua.LState) int {
 					Index: func(idx1 int) lua.LValue { return (lua.LNumber)(((p1.Elements)[idx0])[idx1]) },
 					SetIndex: func(idx1 int, val1 lua.LValue) {
 
-						t1, ok := val1.(lua.LNumber)
+						t1_n, ok := val1.(lua.LNumber)
 
 						if !ok {
-							L.ArgError(3, gobindlua.CastArgError("float64", val1))
+							gobindlua.TableElemCastError(L, 2, "float64", val1)
 						}
 
-						((p1.Elements)[idx0])[idx1] = (float64)(t1)
+						t1 := float64(t1_n)
+
+						((p1.Elements)[idx0])[idx1] = t1
 					},
 				}, L)
 			},
@@ -111,20 +115,22 @@ func luaAccessMatrix(L *lua.LState) int {
 
 				t0, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](val0, 1, func(val1 lua.LValue) float64 {
 
-					v1, ok := val1.(lua.LNumber)
+					v1_n, ok := val1.(lua.LNumber)
 
 					if !ok {
-						L.ArgError(3, gobindlua.CastArgError("float64", val1))
+						gobindlua.TableElemCastError(L, 2, "float64", val1)
 					}
 
-					return (float64)(v1)
+					v1 := float64(v1_n)
+
+					return v1
 				})
 
 				if err != nil {
 					L.ArgError(3, err.Error())
 				}
 
-				(p1.Elements)[idx0] = ([]float64)(t0)
+				(p1.Elements)[idx0] = t0
 			},
 		}, L))
 
@@ -149,20 +155,22 @@ func luaSetMatrix(L *lua.LState) int {
 
 			v0, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](val0, 1, func(val1 lua.LValue) float64 {
 
-				v1, ok := val1.(lua.LNumber)
+				v1_n, ok := val1.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, gobindlua.CastArgError("float64", val1))
+					gobindlua.TableElemCastError(L, 2, "float64", val1)
 				}
 
-				return (float64)(v1)
+				v1 := float64(v1_n)
+
+				return v1
 			})
 
 			if err != nil {
 				L.ArgError(3, err.Error())
 			}
 
-			return ([]float64)(v0)
+			return v0
 		})
 
 		if err != nil {

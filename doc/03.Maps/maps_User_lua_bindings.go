@@ -66,7 +66,7 @@ func luaCheckUser(param int, L *lua.LState) *User {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*User)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("User", ud.Value))
+		gobindlua.CastArgError(L, 1, "User", ud.Value)
 	}
 	return v
 }

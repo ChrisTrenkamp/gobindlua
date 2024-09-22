@@ -45,7 +45,7 @@ func luaCheckLion(param int, L *lua.LState) *Lion {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*Lion)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("Lion", ud.Value))
+		gobindlua.CastArgError(L, 1, "Lion", ud.Value)
 	}
 	return v
 }

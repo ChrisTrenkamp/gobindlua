@@ -52,7 +52,7 @@ func luaCheckSub(param int, L *lua.LState) *Sub {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*Sub)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("Sub", ud.Value))
+		gobindlua.CastArgError(L, 1, "Sub", ud.Value)
 	}
 	return v
 }

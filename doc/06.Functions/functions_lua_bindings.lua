@@ -10,4 +10,12 @@ function functions.print_me(...) end
 ---@return string[]
 function functions.split(s, spl) end
 
+---@param str string
+---@param pad number
+---@return string
+function functions.go_left_pad(str, pad) end
+
+---@param fn function
+function functions.do_func(fn) end
+
 return functions

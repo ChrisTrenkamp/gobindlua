@@ -278,7 +278,7 @@ func {{ .UserDataCheckFn }}(param int, L *lua.LState) *{{ .StructToGenerate }} {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*{{ .StructToGenerate }})
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("{{ .StructToGenerate }}", ud.Value))
+		gobindlua.CastArgError(L, 1, "{{ .StructToGenerate }}", ud.Value)
 	}
 	return v
 }

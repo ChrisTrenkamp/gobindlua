@@ -37,13 +37,15 @@ func luaConstructorArrayStructNewArrayStruct(L *lua.LState) int {
 
 		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(1), 0, func(val0 lua.LValue) float32 {
 
-			v0, ok := val0.(lua.LNumber)
+			v0_n, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(1, gobindlua.CastArgError("float32", val0))
+				gobindlua.TableElemCastError(L, 1, "float32", val0)
 			}
 
-			return (float32)(v0)
+			v0 := float32(v0_n)
+
+			return v0
 		})
 
 		if err != nil {
@@ -70,7 +72,7 @@ func luaCheckArrayStruct(param int, L *lua.LState) *ArrayStruct {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*ArrayStruct)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("ArrayStruct", ud.Value))
+		gobindlua.CastArgError(L, 1, "ArrayStruct", ud.Value)
 	}
 	return v
 }
@@ -87,13 +89,15 @@ func luaAccessArrayStruct(L *lua.LState) int {
 			Index: func(idx0 int) lua.LValue { return (lua.LNumber)((p1.Elements)[idx0]) },
 			SetIndex: func(idx0 int, val0 lua.LValue) {
 
-				t0, ok := val0.(lua.LNumber)
+				t0_n, ok := val0.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, gobindlua.CastArgError("float32", val0))
+					gobindlua.TableElemCastError(L, 1, "float32", val0)
 				}
 
-				(p1.Elements)[idx0] = (float32)(t0)
+				t0 := float32(t0_n)
+
+				(p1.Elements)[idx0] = t0
 			},
 		}, L))
 
@@ -122,13 +126,15 @@ func luaSetArrayStruct(L *lua.LState) int {
 
 		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(3), 0, func(val0 lua.LValue) float32 {
 
-			v0, ok := val0.(lua.LNumber)
+			v0_n, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(3, gobindlua.CastArgError("float32", val0))
+				gobindlua.TableElemCastError(L, 1, "float32", val0)
 			}
 
-			return (float32)(v0)
+			v0 := float32(v0_n)
+
+			return v0
 		})
 
 		if err != nil {
@@ -155,13 +161,15 @@ func luaMethodArrayStructSetElements(L *lua.LState) int {
 
 		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(2), 0, func(val0 lua.LValue) float32 {
 
-			v0, ok := val0.(lua.LNumber)
+			v0_n, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(2, gobindlua.CastArgError("float32", val0))
+				gobindlua.TableElemCastError(L, 1, "float32", val0)
 			}
 
-			return (float32)(v0)
+			v0 := float32(v0_n)
+
+			return v0
 		})
 
 		if err != nil {
@@ -187,13 +195,15 @@ func luaMethodArrayStructSetElementsFromSubpackage(L *lua.LState) int {
 
 		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(2), 0, func(val0 lua.LValue) float32 {
 
-			v0, ok := val0.(lua.LNumber)
+			v0_n, ok := val0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(2, gobindlua.CastArgError("float32", val0))
+				gobindlua.TableElemCastError(L, 1, "float32", val0)
 			}
 
-			return (float32)(v0)
+			v0 := float32(v0_n)
+
+			return v0
 		})
 
 		if err != nil {

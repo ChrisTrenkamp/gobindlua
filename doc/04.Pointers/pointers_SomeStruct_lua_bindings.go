@@ -35,7 +35,7 @@ func luaCheckSomeStruct(param int, L *lua.LState) *SomeStruct {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*SomeStruct)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("SomeStruct", ud.Value))
+		gobindlua.CastArgError(L, 1, "SomeStruct", ud.Value)
 	}
 	return v
 }
@@ -54,7 +54,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 				keyVal0_n, ok := key0.(lua.LString)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("string", key0, 1))
+					gobindlua.TableElemCastError(L, 1, "string", key0)
 				}
 
 				keyVal0 := string(keyVal0_n)
@@ -65,11 +65,13 @@ func luaAccessSomeStruct(L *lua.LState) int {
 					Len: func() int { return len(*ret0) },
 					GetValue: func(key1 lua.LValue) lua.LValue {
 
-						keyVal1, ok := key1.(lua.LString)
+						keyVal1_n, ok := key1.(lua.LString)
 
 						if !ok {
-							L.ArgError(3, gobindlua.CastArgError("string", key1))
+							gobindlua.TableElemCastError(L, 2, "string", key1)
 						}
+
+						keyVal1 := string(keyVal1_n)
 
 						ret1 := (*ret0)[(string)(keyVal1)]
 						return gobindlua.NewUserData(&gobindlua.LuaArray{
@@ -78,33 +80,39 @@ func luaAccessSomeStruct(L *lua.LState) int {
 							Index: func(idx2 int) lua.LValue { return (lua.LString)((*ret1)[idx2]) },
 							SetIndex: func(idx2 int, val2 lua.LValue) {
 
-								t2, ok := val2.(lua.LString)
+								t2_n, ok := val2.(lua.LString)
 
 								if !ok {
-									L.ArgError(3, gobindlua.CastArgError("string", val2))
+									gobindlua.TableElemCastError(L, 3, "string", val2)
 								}
 
-								(*ret1)[idx2] = (string)(t2)
+								t2 := string(t2_n)
+
+								(*ret1)[idx2] = t2
 							},
 						}, L)
 					},
 					SetValue: func(key1 lua.LValue, val1 lua.LValue) {
 
-						keyVal1, ok := key1.(lua.LString)
+						keyVal1_n, ok := key1.(lua.LString)
 
 						if !ok {
-							L.ArgError(3, gobindlua.CastArgError("string", key1))
+							gobindlua.TableElemCastError(L, 2, "string", key1)
 						}
+
+						keyVal1 := string(keyVal1_n)
 
 						valVal1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, 2, func(val2 lua.LValue) string {
 
-							v2, ok := val2.(lua.LString)
+							v2_n, ok := val2.(lua.LString)
 
 							if !ok {
-								L.ArgError(3, gobindlua.CastArgError("string", val2))
+								gobindlua.TableElemCastError(L, 3, "string", val2)
 							}
 
-							return (string)(v2)
+							v2 := string(v2_n)
+
+							return v2
 						})
 
 						if err != nil {
@@ -124,13 +132,15 @@ func luaAccessSomeStruct(L *lua.LState) int {
 								Index: func(idx2 int) lua.LValue { return (lua.LString)((*ret1)[idx2]) },
 								SetIndex: func(idx2 int, val2 lua.LValue) {
 
-									t2, ok := val2.(lua.LString)
+									t2_n, ok := val2.(lua.LString)
 
 									if !ok {
-										L.ArgError(3, gobindlua.CastArgError("string", val2))
+										gobindlua.TableElemCastError(L, 3, "string", val2)
 									}
 
-									(*ret1)[idx2] = (string)(t2)
+									t2 := string(t2_n)
+
+									(*ret1)[idx2] = t2
 								},
 							}, L)
 							f1(key1, val1)
@@ -143,35 +153,39 @@ func luaAccessSomeStruct(L *lua.LState) int {
 				keyVal0_n, ok := key0.(lua.LString)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("string", key0, 1))
+					gobindlua.TableElemCastError(L, 1, "string", key0)
 				}
 
 				keyVal0 := string(keyVal0_n)
 
 				valVal0, err := gobindlua.MapLuaArrayOrTableToGoMap[string, *[]string](val0, 1, func(key1, val1 lua.LValue) (string, *[]string) {
 
-					k1, ok := key1.(lua.LString)
+					k1_n, ok := key1.(lua.LString)
 
 					if !ok {
-						L.ArgError(3, gobindlua.CastArgError("string", key1))
+						gobindlua.TableElemCastError(L, 2, "string", key1)
 					}
+
+					k1 := string(k1_n)
 
 					v1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, 2, func(val2 lua.LValue) string {
 
-						v2, ok := val2.(lua.LString)
+						v2_n, ok := val2.(lua.LString)
 
 						if !ok {
-							L.ArgError(3, gobindlua.CastArgError("string", val2))
+							gobindlua.TableElemCastError(L, 3, "string", val2)
 						}
 
-						return (string)(v2)
+						v2 := string(v2_n)
+
+						return v2
 					})
 
 					if err != nil {
 						L.ArgError(3, err.Error())
 					}
 
-					return (string)(k1), (*[]string)(&v1)
+					return k1, &v1
 				})
 
 				if err != nil {
@@ -190,11 +204,13 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						Len: func() int { return len(*ret0) },
 						GetValue: func(key1 lua.LValue) lua.LValue {
 
-							keyVal1, ok := key1.(lua.LString)
+							keyVal1_n, ok := key1.(lua.LString)
 
 							if !ok {
-								L.ArgError(3, gobindlua.CastArgError("string", key1))
+								gobindlua.TableElemCastError(L, 2, "string", key1)
 							}
+
+							keyVal1 := string(keyVal1_n)
 
 							ret1 := (*ret0)[(string)(keyVal1)]
 							return gobindlua.NewUserData(&gobindlua.LuaArray{
@@ -203,33 +219,39 @@ func luaAccessSomeStruct(L *lua.LState) int {
 								Index: func(idx2 int) lua.LValue { return (lua.LString)((*ret1)[idx2]) },
 								SetIndex: func(idx2 int, val2 lua.LValue) {
 
-									t2, ok := val2.(lua.LString)
+									t2_n, ok := val2.(lua.LString)
 
 									if !ok {
-										L.ArgError(3, gobindlua.CastArgError("string", val2))
+										gobindlua.TableElemCastError(L, 3, "string", val2)
 									}
 
-									(*ret1)[idx2] = (string)(t2)
+									t2 := string(t2_n)
+
+									(*ret1)[idx2] = t2
 								},
 							}, L)
 						},
 						SetValue: func(key1 lua.LValue, val1 lua.LValue) {
 
-							keyVal1, ok := key1.(lua.LString)
+							keyVal1_n, ok := key1.(lua.LString)
 
 							if !ok {
-								L.ArgError(3, gobindlua.CastArgError("string", key1))
+								gobindlua.TableElemCastError(L, 2, "string", key1)
 							}
+
+							keyVal1 := string(keyVal1_n)
 
 							valVal1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, 2, func(val2 lua.LValue) string {
 
-								v2, ok := val2.(lua.LString)
+								v2_n, ok := val2.(lua.LString)
 
 								if !ok {
-									L.ArgError(3, gobindlua.CastArgError("string", val2))
+									gobindlua.TableElemCastError(L, 3, "string", val2)
 								}
 
-								return (string)(v2)
+								v2 := string(v2_n)
+
+								return v2
 							})
 
 							if err != nil {
@@ -249,13 +271,15 @@ func luaAccessSomeStruct(L *lua.LState) int {
 									Index: func(idx2 int) lua.LValue { return (lua.LString)((*ret1)[idx2]) },
 									SetIndex: func(idx2 int, val2 lua.LValue) {
 
-										t2, ok := val2.(lua.LString)
+										t2_n, ok := val2.(lua.LString)
 
 										if !ok {
-											L.ArgError(3, gobindlua.CastArgError("string", val2))
+											gobindlua.TableElemCastError(L, 3, "string", val2)
 										}
 
-										(*ret1)[idx2] = (string)(t2)
+										t2 := string(t2_n)
+
+										(*ret1)[idx2] = t2
 									},
 								}, L)
 								f1(key1, val1)
@@ -287,12 +311,12 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						t1_n, ok := val1.(lua.LNumber)
 
 						if !ok {
-							L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
+							gobindlua.TableElemCastError(L, 2, "int", val1)
 						}
 
 						t1 := int(t1_n)
 
-						(*(*p1.D)[idx0])[idx1] = (*int)(&t1)
+						(*(*p1.D)[idx0])[idx1] = &t1
 					},
 				}, L)
 			},
@@ -303,19 +327,19 @@ func luaAccessSomeStruct(L *lua.LState) int {
 					v1_n, ok := val1.(lua.LNumber)
 
 					if !ok {
-						L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
+						gobindlua.TableElemCastError(L, 2, "int", val1)
 					}
 
 					v1 := int(v1_n)
 
-					return (*int)(&v1)
+					return &v1
 				})
 
 				if err != nil {
 					L.ArgError(3, err.Error())
 				}
 
-				(*p1.D)[idx0] = (*[]*int)(&t0)
+				(*p1.D)[idx0] = &t0
 			},
 		}, L))
 
@@ -333,16 +357,16 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						t1_ud, ok := val1.(*lua.LUserData)
 
 						if !ok {
-							L.ArgError(3, gobindlua.TableElementCastError("Sub", val1, 2))
+							gobindlua.TableElemCastError(L, 2, "Sub", val1)
 						}
 
 						t1, ok := t1_ud.Value.(*Sub)
 
 						if !ok {
-							L.ArgError(3, gobindlua.TableElementCastError("Sub", t1_ud.Value, 2))
+							gobindlua.TableElemCastError(L, 2, "Sub", val1)
 						}
 
-						((*p1.E)[idx0])[idx1] = (*Sub)(t1)
+						((*p1.E)[idx0])[idx1] = t1
 					},
 				}, L)
 			},
@@ -353,23 +377,23 @@ func luaAccessSomeStruct(L *lua.LState) int {
 					v1_ud, ok := val1.(*lua.LUserData)
 
 					if !ok {
-						L.ArgError(3, gobindlua.TableElementCastError("Sub", val1, 2))
+						gobindlua.TableElemCastError(L, 2, "Sub", val1)
 					}
 
 					v1, ok := v1_ud.Value.(*Sub)
 
 					if !ok {
-						L.ArgError(3, gobindlua.TableElementCastError("Sub", v1_ud.Value, 2))
+						gobindlua.TableElemCastError(L, 2, "Sub", val1)
 					}
 
-					return (*Sub)(v1)
+					return v1
 				})
 
 				if err != nil {
 					L.ArgError(3, err.Error())
 				}
 
-				(*p1.E)[idx0] = ([]*Sub)(t0)
+				(*p1.E)[idx0] = t0
 			},
 		}, L))
 
@@ -386,13 +410,13 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						keyVal1_ud, ok := key1.(*lua.LUserData)
 
 						if !ok {
-							L.ArgError(3, gobindlua.TableElementCastError("Sub", key1, 2))
+							gobindlua.TableElemCastError(L, 2, "Sub", key1)
 						}
 
 						keyVal1, ok := keyVal1_ud.Value.(*Sub)
 
 						if !ok {
-							L.ArgError(3, gobindlua.TableElementCastError("Sub", keyVal1_ud.Value, 2))
+							gobindlua.TableElemCastError(L, 2, "Sub", key1)
 						}
 
 						ret1 := ((p1.F)[idx0])[(*Sub)(keyVal1)]
@@ -403,19 +427,19 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						keyVal1_ud, ok := key1.(*lua.LUserData)
 
 						if !ok {
-							L.ArgError(3, gobindlua.TableElementCastError("Sub", key1, 2))
+							gobindlua.TableElemCastError(L, 2, "Sub", key1)
 						}
 
 						keyVal1, ok := keyVal1_ud.Value.(*Sub)
 
 						if !ok {
-							L.ArgError(3, gobindlua.TableElementCastError("Sub", keyVal1_ud.Value, 2))
+							gobindlua.TableElemCastError(L, 2, "Sub", key1)
 						}
 
 						valVal1_n, ok := val1.(lua.LNumber)
 
 						if !ok {
-							L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
+							gobindlua.TableElemCastError(L, 2, "int", val1)
 						}
 
 						valVal1 := int(valVal1_n)
@@ -440,31 +464,31 @@ func luaAccessSomeStruct(L *lua.LState) int {
 					k1_ud, ok := key1.(*lua.LUserData)
 
 					if !ok {
-						L.ArgError(3, gobindlua.TableElementCastError("Sub", key1, 2))
+						gobindlua.TableElemCastError(L, 2, "Sub", key1)
 					}
 
 					k1, ok := k1_ud.Value.(*Sub)
 
 					if !ok {
-						L.ArgError(3, gobindlua.TableElementCastError("Sub", k1_ud.Value, 2))
+						gobindlua.TableElemCastError(L, 2, "Sub", key1)
 					}
 
 					v1_n, ok := val1.(lua.LNumber)
 
 					if !ok {
-						L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
+						gobindlua.TableElemCastError(L, 2, "int", val1)
 					}
 
 					v1 := int(v1_n)
 
-					return (*Sub)(k1), (*int)(&v1)
+					return k1, &v1
 				})
 
 				if err != nil {
 					L.ArgError(3, err.Error())
 				}
 
-				(p1.F)[idx0] = (map[*Sub]*int)(t0)
+				(p1.F)[idx0] = t0
 			},
 		}, L))
 
@@ -487,42 +511,46 @@ func luaSetSomeStruct(L *lua.LState) int {
 			k0_n, ok := key0.(lua.LString)
 
 			if !ok {
-				L.ArgError(3, gobindlua.TableElementCastError("string", key0, 1))
+				gobindlua.TableElemCastError(L, 1, "string", key0)
 			}
 
 			k0 := string(k0_n)
 
 			v0, err := gobindlua.MapLuaArrayOrTableToGoMap[string, *[]string](val0, 1, func(key1, val1 lua.LValue) (string, *[]string) {
 
-				k1, ok := key1.(lua.LString)
+				k1_n, ok := key1.(lua.LString)
 
 				if !ok {
-					L.ArgError(3, gobindlua.CastArgError("string", key1))
+					gobindlua.TableElemCastError(L, 2, "string", key1)
 				}
+
+				k1 := string(k1_n)
 
 				v1, err := gobindlua.MapLuaArrayOrTableToGoSlice[string](val1, 2, func(val2 lua.LValue) string {
 
-					v2, ok := val2.(lua.LString)
+					v2_n, ok := val2.(lua.LString)
 
 					if !ok {
-						L.ArgError(3, gobindlua.CastArgError("string", val2))
+						gobindlua.TableElemCastError(L, 3, "string", val2)
 					}
 
-					return (string)(v2)
+					v2 := string(v2_n)
+
+					return v2
 				})
 
 				if err != nil {
 					L.ArgError(3, err.Error())
 				}
 
-				return (string)(k1), (*[]string)(&v1)
+				return k1, &v1
 			})
 
 			if err != nil {
 				L.ArgError(3, err.Error())
 			}
 
-			return (*string)(&k0), (*map[string]*[]string)(&v0)
+			return &k0, &v0
 		})
 
 		if err != nil {
@@ -536,7 +564,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 		ud, ok := L.CheckUserData(3).Value.(*Sub)
 
 		if !ok {
-			L.ArgError(3, gobindlua.CastArgError("Sub", L.CheckUserData(3)))
+			gobindlua.CastArgError(L, 3, "Sub", L.CheckUserData(3))
 		}
 
 		p1.B = ud
@@ -546,7 +574,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 		ud, ok := L.CheckUserData(3).Value.(*Sub)
 
 		if !ok {
-			L.ArgError(3, gobindlua.CastArgError("Sub", L.CheckUserData(3)))
+			gobindlua.CastArgError(L, 3, "Sub", L.CheckUserData(3))
 		}
 
 		p1.C = *ud
@@ -560,19 +588,19 @@ func luaSetSomeStruct(L *lua.LState) int {
 				v1_n, ok := val1.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
+					gobindlua.TableElemCastError(L, 2, "int", val1)
 				}
 
 				v1 := int(v1_n)
 
-				return (*int)(&v1)
+				return &v1
 			})
 
 			if err != nil {
 				L.ArgError(3, err.Error())
 			}
 
-			return (*[]*int)(&v0)
+			return &v0
 		})
 
 		if err != nil {
@@ -590,23 +618,23 @@ func luaSetSomeStruct(L *lua.LState) int {
 				v1_ud, ok := val1.(*lua.LUserData)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("Sub", val1, 2))
+					gobindlua.TableElemCastError(L, 2, "Sub", val1)
 				}
 
 				v1, ok := v1_ud.Value.(*Sub)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("Sub", v1_ud.Value, 2))
+					gobindlua.TableElemCastError(L, 2, "Sub", val1)
 				}
 
-				return (*Sub)(v1)
+				return v1
 			})
 
 			if err != nil {
 				L.ArgError(3, err.Error())
 			}
 
-			return ([]*Sub)(v0)
+			return v0
 		})
 
 		if err != nil {
@@ -624,31 +652,31 @@ func luaSetSomeStruct(L *lua.LState) int {
 				k1_ud, ok := key1.(*lua.LUserData)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("Sub", key1, 2))
+					gobindlua.TableElemCastError(L, 2, "Sub", key1)
 				}
 
 				k1, ok := k1_ud.Value.(*Sub)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("Sub", k1_ud.Value, 2))
+					gobindlua.TableElemCastError(L, 2, "Sub", key1)
 				}
 
 				v1_n, ok := val1.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("int", val1, 2))
+					gobindlua.TableElemCastError(L, 2, "int", val1)
 				}
 
 				v1 := int(v1_n)
 
-				return (*Sub)(k1), (*int)(&v1)
+				return k1, &v1
 			})
 
 			if err != nil {
 				L.ArgError(3, err.Error())
 			}
 
-			return (map[*Sub]*int)(v0)
+			return v0
 		})
 
 		if err != nil {

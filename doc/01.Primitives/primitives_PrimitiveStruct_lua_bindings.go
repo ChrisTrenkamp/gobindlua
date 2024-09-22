@@ -46,7 +46,7 @@ func luaCheckPrimitiveStruct(param int, L *lua.LState) *PrimitiveStruct {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*PrimitiveStruct)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("PrimitiveStruct", ud.Value))
+		gobindlua.CastArgError(L, 1, "PrimitiveStruct", ud.Value)
 	}
 	return v
 }

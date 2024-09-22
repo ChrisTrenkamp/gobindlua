@@ -45,7 +45,7 @@ func luaCheckDog(param int, L *lua.LState) *Dog {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*Dog)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("Dog", ud.Value))
+		gobindlua.CastArgError(L, 1, "Dog", ud.Value)
 	}
 	return v
 }

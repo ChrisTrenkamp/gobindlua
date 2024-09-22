@@ -46,25 +46,27 @@ func luaConstructorUserDatabaseNewUserDatabaseFrom(L *lua.LState) int {
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoMap[int, User](L.CheckAny(1), 0, func(key0, val0 lua.LValue) (int, User) {
 
-			k0, ok := key0.(lua.LNumber)
+			k0_n, ok := key0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(1, gobindlua.CastArgError("int", key0))
+				gobindlua.TableElemCastError(L, 1, "int", key0)
 			}
+
+			k0 := int(k0_n)
 
 			v0_ud, ok := val0.(*lua.LUserData)
 
 			if !ok {
-				L.ArgError(1, gobindlua.TableElementCastError("User", val0, 1))
+				gobindlua.TableElemCastError(L, 1, "User", val0)
 			}
 
 			v0, ok := v0_ud.Value.(*User)
 
 			if !ok {
-				L.ArgError(3, gobindlua.TableElementCastError("User", v0_ud.Value, 1))
+				gobindlua.TableElemCastError(L, 1, "User", val0)
 			}
 
-			return (int)(k0), (User)(*v0)
+			return k0, *v0
 		})
 
 		if err != nil {
@@ -89,7 +91,7 @@ func luaCheckUserDatabase(param int, L *lua.LState) *UserDatabase {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*UserDatabase)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("UserDatabase", ud.Value))
+		gobindlua.CastArgError(L, 1, "UserDatabase", ud.Value)
 	}
 	return v
 }
@@ -105,33 +107,37 @@ func luaAccessUserDatabase(L *lua.LState) int {
 			Len: func() int { return len(p1.Users) },
 			GetValue: func(key0 lua.LValue) lua.LValue {
 
-				keyVal0, ok := key0.(lua.LNumber)
+				keyVal0_n, ok := key0.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, gobindlua.CastArgError("int", key0))
+					gobindlua.TableElemCastError(L, 1, "int", key0)
 				}
+
+				keyVal0 := int(keyVal0_n)
 
 				ret0 := (p1.Users)[(int)(keyVal0)]
 				return gobindlua.NewUserData(&ret0, L)
 			},
 			SetValue: func(key0 lua.LValue, val0 lua.LValue) {
 
-				keyVal0, ok := key0.(lua.LNumber)
+				keyVal0_n, ok := key0.(lua.LNumber)
 
 				if !ok {
-					L.ArgError(3, gobindlua.CastArgError("int", key0))
+					gobindlua.TableElemCastError(L, 1, "int", key0)
 				}
+
+				keyVal0 := int(keyVal0_n)
 
 				valVal0_ud, ok := val0.(*lua.LUserData)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("User", val0, 1))
+					gobindlua.TableElemCastError(L, 1, "User", val0)
 				}
 
 				valVal0, ok := valVal0_ud.Value.(*User)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("User", valVal0_ud.Value, 1))
+					gobindlua.TableElemCastError(L, 1, "User", val0)
 				}
 
 				(p1.Users)[(int)(keyVal0)] = (User)(*valVal0)
@@ -163,25 +169,27 @@ func luaSetUserDatabase(L *lua.LState) int {
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoMap[int, User](L.CheckAny(3), 0, func(key0, val0 lua.LValue) (int, User) {
 
-			k0, ok := key0.(lua.LNumber)
+			k0_n, ok := key0.(lua.LNumber)
 
 			if !ok {
-				L.ArgError(3, gobindlua.CastArgError("int", key0))
+				gobindlua.TableElemCastError(L, 1, "int", key0)
 			}
+
+			k0 := int(k0_n)
 
 			v0_ud, ok := val0.(*lua.LUserData)
 
 			if !ok {
-				L.ArgError(3, gobindlua.TableElementCastError("User", val0, 1))
+				gobindlua.TableElemCastError(L, 1, "User", val0)
 			}
 
 			v0, ok := v0_ud.Value.(*User)
 
 			if !ok {
-				L.ArgError(3, gobindlua.TableElementCastError("User", v0_ud.Value, 1))
+				gobindlua.TableElemCastError(L, 1, "User", val0)
 			}
 
-			return (int)(k0), (User)(*v0)
+			return k0, *v0
 		})
 
 		if err != nil {

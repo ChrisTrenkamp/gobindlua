@@ -45,7 +45,7 @@ func luaCheckHuman(param int, L *lua.LState) *Human {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*Human)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("Human", ud.Value))
+		gobindlua.CastArgError(L, 1, "Human", ud.Value)
 	}
 	return v
 }

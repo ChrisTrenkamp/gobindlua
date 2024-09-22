@@ -46,7 +46,7 @@ func luaCheckMammalList(param int, L *lua.LState) *MammalList {
 	ud := L.CheckUserData(param)
 	v, ok := ud.Value.(*MammalList)
 	if !ok {
-		L.ArgError(1, gobindlua.CastArgError("MammalList", ud.Value))
+		gobindlua.CastArgError(L, 1, "MammalList", ud.Value)
 	}
 	return v
 }
@@ -69,16 +69,16 @@ func luaAccessMammalList(L *lua.LState) int {
 				t0_ud, ok := val0.(*lua.LUserData)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("mammal.Mammal", val0, 1))
+					gobindlua.TableElemCastError(L, 1, "mammal.Mammal", val0)
 				}
 
 				t0, ok := t0_ud.Value.(mammal.Mammal)
 
 				if !ok {
-					L.ArgError(3, gobindlua.TableElementCastError("mammal.Mammal", t0_ud.Value, 1))
+					gobindlua.TableElemCastError(L, 1, "mammal.Mammal", val0)
 				}
 
-				(p1.NonPets)[idx0] = (mammal.Mammal)(t0)
+				(p1.NonPets)[idx0] = t0
 			},
 		}, L))
 
@@ -99,7 +99,7 @@ func luaSetMammalList(L *lua.LState) int {
 		ud, ok := L.CheckUserData(3).Value.(mammal.Mammal)
 
 		if !ok {
-			L.ArgError(3, gobindlua.TableElementCastError("mammal.Mammal", L.CheckUserData(3).Value, 0))
+			gobindlua.CastArgError(L, 3, "mammal.Mammal", L.CheckUserData(3))
 		}
 
 		p1.Pet = ud
@@ -111,16 +111,16 @@ func luaSetMammalList(L *lua.LState) int {
 			v0_ud, ok := val0.(*lua.LUserData)
 
 			if !ok {
-				L.ArgError(3, gobindlua.TableElementCastError("mammal.Mammal", val0, 1))
+				gobindlua.TableElemCastError(L, 1, "mammal.Mammal", val0)
 			}
 
 			v0, ok := v0_ud.Value.(mammal.Mammal)
 
 			if !ok {
-				L.ArgError(3, gobindlua.TableElementCastError("mammal.Mammal", v0_ud.Value, 1))
+				gobindlua.TableElemCastError(L, 1, "mammal.Mammal", val0)
 			}
 
-			return (mammal.Mammal)(v0)
+			return v0
 		})
 
 		if err != nil {

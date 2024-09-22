@@ -10,6 +10,8 @@ func FunctionsModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
 	L.SetField(staticMethodsTable, "print_me", L.NewFunction(luaFunctionPrintMe))
 	L.SetField(staticMethodsTable, "split", L.NewFunction(luaFunctionSplit))
+	L.SetField(staticMethodsTable, "go_left_pad", L.NewFunction(luaFunctionGoLeftPad))
+	L.SetField(staticMethodsTable, "do_func", L.NewFunction(luaFunctionDoFunc))
 
 	L.Push(staticMethodsTable)
 
@@ -26,7 +28,7 @@ func luaFunctionPrintMe(L *lua.LState) int {
 
 			v0 := gobindlua.UnwrapLValueToAny(val0)
 
-			return (any)(v0)
+			return v0
 		})
 
 		if err != nil {
@@ -65,15 +67,82 @@ func luaFunctionSplit(L *lua.LState) int {
 		Index: func(idx0 int) lua.LValue { return (lua.LString)((r0)[idx0]) },
 		SetIndex: func(idx0 int, val0 lua.LValue) {
 
-			t0, ok := val0.(lua.LString)
+			t0_n, ok := val0.(lua.LString)
 
 			if !ok {
-				L.ArgError(3, gobindlua.CastArgError("string", val0))
+				gobindlua.TableElemCastError(L, 1, "string", val0)
 			}
 
-			(r0)[idx0] = (string)(t0)
+			t0 := string(t0_n)
+
+			(r0)[idx0] = t0
 		},
 	}, L))
 
 	return 1
+}
+
+func luaFunctionGoLeftPad(L *lua.LState) int {
+
+	var p0 string
+
+	var p1 int
+
+	{
+		ud := string(L.CheckString(1))
+		p0 = ud
+	}
+
+	{
+		ud := int(L.CheckNumber(2))
+		p1 = ud
+	}
+
+	r0 := GoLeftPad(p0, p1)
+
+	L.Push((lua.LString)(r0))
+
+	return 1
+}
+
+func luaFunctionDoFunc(L *lua.LState) int {
+
+	var p0 func(string, int) string
+
+	{
+
+		ud_lf, ok := L.CheckAny(1).(*lua.LFunction)
+
+		if !ok {
+			gobindlua.CastArgError(L, 1, "func(string, int) string", L.CheckAny(1))
+		}
+
+		ud := func(p0 string, p1 int) string {
+			L.Push(ud_lf)
+
+			L.Push((lua.LString)(p0))
+
+			L.Push((lua.LNumber)(p1))
+
+			L.Call(2, 1)
+
+			r0l_n, ok := L.Get(2).(lua.LString)
+
+			if !ok {
+				gobindlua.FuncResCastError(L, 1, "string", L.Get(2))
+			}
+
+			r0l := string(r0l_n)
+
+			L.Pop(1 + 1)
+
+			return r0l
+		}
+
+		p0 = ud
+	}
+
+	DoFunc(p0)
+
+	return 0
 }
