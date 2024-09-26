@@ -107,20 +107,20 @@ func luaFunctionGoLeftPad(L *lua.LState) int {
 
 func luaFunctionDoFunc(L *lua.LState) int {
 
-	var p0 func(string, int) string
+	var p0 func(*string, int) string
 
 	{
 
 		ud_lf, ok := L.CheckAny(1).(*lua.LFunction)
 
 		if !ok {
-			gobindlua.CastArgError(L, 1, "func(string, int) string", L.CheckAny(1))
+			gobindlua.CastArgError(L, 1, "func(*string, int) string", L.CheckAny(1))
 		}
 
-		ud := func(p0 string, p1 int) string {
+		ud := func(p0 *string, p1 int) string {
 			L.Push(ud_lf)
 
-			L.Push((lua.LString)(p0))
+			L.Push((lua.LString)(*p0))
 
 			L.Push((lua.LNumber)(p1))
 

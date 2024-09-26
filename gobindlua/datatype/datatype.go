@@ -577,7 +577,7 @@ func (d *DataType) convertLuaTypeToFunc(typ *types.Signature, variableToCreate s
 	sig := "func("
 
 	for i, a := range params {
-		sig += a.GoName + " " + a.ActualGoType()
+		sig += a.GoName + " " + a.dereference() + a.ActualGoType()
 
 		if i != len(params)-1 {
 			sig += ", "

@@ -30,20 +30,20 @@ func (goType *FnContainer) LuaRegisterGlobalMetatable(L *lua.LState) {
 
 func luaConstructorFnContainerNewFnContainer(L *lua.LState) int {
 
-	var p0 func(string, int) string
+	var p0 func(*string, int) string
 
 	{
 
 		ud_lf, ok := L.CheckAny(1).(*lua.LFunction)
 
 		if !ok {
-			gobindlua.CastArgError(L, 1, "func(string, int) string", L.CheckAny(1))
+			gobindlua.CastArgError(L, 1, "func(*string, int) string", L.CheckAny(1))
 		}
 
-		ud := func(p0 string, p1 int) string {
+		ud := func(p0 *string, p1 int) string {
 			L.Push(ud_lf)
 
-			L.Push((lua.LString)(p0))
+			L.Push((lua.LString)(*p0))
 
 			L.Push((lua.LNumber)(p1))
 
@@ -93,13 +93,13 @@ func luaAccessFnContainer(L *lua.LState) int {
 	case "fn":
 		L.Push(L.NewFunction(func(L *lua.LState) int {
 
-			var p0 string
+			var p0 *string
 
 			var p1 int
 
 			{
 				ud := string(L.CheckString(1))
-				p0 = ud
+				p0 = &ud
 			}
 
 			{
@@ -131,13 +131,13 @@ func luaSetFnContainer(L *lua.LState) int {
 		ud_lf, ok := L.CheckAny(3).(*lua.LFunction)
 
 		if !ok {
-			gobindlua.CastArgError(L, 3, "func(string, int) string", L.CheckAny(3))
+			gobindlua.CastArgError(L, 3, "func(*string, int) string", L.CheckAny(3))
 		}
 
-		ud := func(p0 string, p1 int) string {
+		ud := func(p0 *string, p1 int) string {
 			L.Push(ud_lf)
 
-			L.Push((lua.LString)(p0))
+			L.Push((lua.LString)(*p0))
 
 			L.Push((lua.LNumber)(p1))
 

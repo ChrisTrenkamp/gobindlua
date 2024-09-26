@@ -48,7 +48,8 @@ func Example() {
 	}
 
 	container := L.GetGlobal("container").(*lua.LUserData).Value.(*FnContainer)
-	fmt.Println(container.Fn(" hi lua from go!", 2))
+	str := " hi lua from go!"
+	fmt.Println(container.Fn(&str, 2))
 
 	// Output:
 	//[foo bar] [eggs ham]

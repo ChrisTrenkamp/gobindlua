@@ -31,17 +31,18 @@ func GoLeftPad(str string, pad int) string {
 }
 
 //gobindlua:function
-func DoFunc(fn func(string, int) string) {
-	fmt.Println(`Result of fn("foo", 3) call:`, fn("foo", 3))
+func DoFunc(fn func(*string, int) string) {
+	str := "foo"
+	fmt.Println(`Result of fn("foo", 3) call:`, fn(&str, 3))
 }
 
 //go:generate go run github.com/ChrisTrenkamp/gobindlua/gobindlua
 type FnContainer struct {
-	Fn func(string, int) string
+	Fn func(*string, int) string
 }
 
 //gobindlua:constructor
-func NewFnContainer(fn func(string, int) string) FnContainer {
+func NewFnContainer(fn func(*string, int) string) FnContainer {
 	return FnContainer{
 		Fn: fn,
 	}
