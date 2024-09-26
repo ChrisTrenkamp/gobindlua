@@ -58,12 +58,12 @@ func luaCheckSub(param int, L *lua.LState) *Sub {
 }
 
 func luaAccessSub(L *lua.LState) int {
-	p1 := luaCheckSub(1, L)
+	recv := luaCheckSub(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "str":
-		L.Push((lua.LString)(*p1.Str))
+		L.Push((lua.LString)(*recv.Str))
 
 	default:
 		L.Push(lua.LNil)
@@ -73,13 +73,13 @@ func luaAccessSub(L *lua.LState) int {
 }
 
 func luaSetSub(L *lua.LState) int {
-	p1 := luaCheckSub(1, L)
+	recv := luaCheckSub(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "str":
 		ud := string(L.CheckString(3))
-		p1.Str = &ud
+		recv.Str = &ud
 
 	default:
 		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))

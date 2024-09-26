@@ -8,8 +8,8 @@ import (
 	"io"
 	"text/template"
 
+	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
-	"github.com/ChrisTrenkamp/gobindlua/gobindlua/functiontype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gblimports"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
 	"golang.org/x/text/cases"
@@ -28,7 +28,7 @@ type PackageGenerator struct {
 	packageSource         *packages.Package
 	allDeclaredInterfaces []declaredinterface.DeclaredInterface
 
-	StaticFunctions []functiontype.FunctionType
+	StaticFunctions []datatype.FunctionType
 	imports         gblimports.Imports
 }
 
@@ -72,8 +72,8 @@ func (g *PackageGenerator) PackageToGenerateMetatableName() string {
 	return g.packageToGenerate
 }
 
-func (g *PackageGenerator) gatherAllFunctions() []functiontype.FunctionType {
-	ret := make([]functiontype.FunctionType, 0)
+func (g *PackageGenerator) gatherAllFunctions() []datatype.FunctionType {
+	ret := make([]datatype.FunctionType, 0)
 
 	for _, syn := range g.packageSource.Syntax {
 		for _, dec := range syn.Decls {
@@ -86,7 +86,7 @@ func (g *PackageGenerator) gatherAllFunctions() []functiontype.FunctionType {
 
 				luaName := gobindluautil.SnakeCase(fnName)
 				sourceCodeName := "luaFunction" + fnName
-				ret = append(ret, functiontype.CreateFunction(fn, false, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
+				ret = append(ret, datatype.CreateFunctionFromExpr(fn, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
 			}
 		}
 	}

@@ -52,27 +52,27 @@ func luaCheckPrimitiveStruct(param int, L *lua.LState) *PrimitiveStruct {
 }
 
 func luaAccessPrimitiveStruct(L *lua.LState) int {
-	p1 := luaCheckPrimitiveStruct(1, L)
+	recv := luaCheckPrimitiveStruct(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "my_bool":
-		L.Push((lua.LBool)(p1.MyBool))
+		L.Push((lua.LBool)(recv.MyBool))
 
 	case "my_int":
-		L.Push((lua.LNumber)(p1.MyInt))
+		L.Push((lua.LNumber)(recv.MyInt))
 
 	case "my_int64":
-		L.Push((lua.LNumber)(p1.MyInt64))
+		L.Push((lua.LNumber)(recv.MyInt64))
 
 	case "my_float":
-		L.Push((lua.LNumber)(p1.MyFloat))
+		L.Push((lua.LNumber)(recv.MyFloat))
 
 	case "my_string":
-		L.Push((lua.LString)(p1.SomeString))
+		L.Push((lua.LString)(recv.SomeString))
 
 	case "my_specialized_int":
-		L.Push((lua.LNumber)(p1.MySpecializedInt))
+		L.Push((lua.LNumber)(recv.MySpecializedInt))
 
 	case "divide_my_int":
 		L.Push(L.NewFunction(luaMethodPrimitiveStructDivideMyInt))
@@ -88,33 +88,33 @@ func luaAccessPrimitiveStruct(L *lua.LState) int {
 }
 
 func luaSetPrimitiveStruct(L *lua.LState) int {
-	p1 := luaCheckPrimitiveStruct(1, L)
+	recv := luaCheckPrimitiveStruct(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "my_bool":
 		ud := bool(L.CheckBool(3))
-		p1.MyBool = ud
+		recv.MyBool = ud
 
 	case "my_int":
 		ud := int32(L.CheckNumber(3))
-		p1.MyInt = ud
+		recv.MyInt = ud
 
 	case "my_int64":
 		ud := int64(L.CheckNumber(3))
-		p1.MyInt64 = ud
+		recv.MyInt64 = ud
 
 	case "my_float":
 		ud := primitivesubpackage.SomeFloat64(L.CheckNumber(3))
-		p1.MyFloat = ud
+		recv.MyFloat = ud
 
 	case "my_string":
 		ud := string(L.CheckString(3))
-		p1.SomeString = ud
+		recv.SomeString = ud
 
 	case "my_specialized_int":
 		ud := SpecializedInt(L.CheckNumber(3))
-		p1.MySpecializedInt = ud
+		recv.MySpecializedInt = ud
 
 	default:
 		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))

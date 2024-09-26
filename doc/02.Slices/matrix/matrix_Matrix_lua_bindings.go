@@ -84,19 +84,19 @@ func luaCheckMatrix(param int, L *lua.LState) *Matrix {
 }
 
 func luaAccessMatrix(L *lua.LState) int {
-	p1 := luaCheckMatrix(1, L)
+	recv := luaCheckMatrix(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "elements":
 		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
-			Slice: p1.Elements,
-			Len:   func() int { return len(p1.Elements) },
+			Slice: recv.Elements,
+			Len:   func() int { return len(recv.Elements) },
 			Index: func(idx0 int) lua.LValue {
 				return gobindlua.NewUserData(&gobindlua.LuaArray{
-					Slice: (p1.Elements)[idx0],
-					Len:   func() int { return len((p1.Elements)[idx0]) },
-					Index: func(idx1 int) lua.LValue { return (lua.LNumber)(((p1.Elements)[idx0])[idx1]) },
+					Slice: (recv.Elements)[idx0],
+					Len:   func() int { return len((recv.Elements)[idx0]) },
+					Index: func(idx1 int) lua.LValue { return (lua.LNumber)(((recv.Elements)[idx0])[idx1]) },
 					SetIndex: func(idx1 int, val1 lua.LValue) {
 
 						t1_n, ok := val1.(lua.LNumber)
@@ -107,7 +107,7 @@ func luaAccessMatrix(L *lua.LState) int {
 
 						t1 := float64(t1_n)
 
-						((p1.Elements)[idx0])[idx1] = t1
+						((recv.Elements)[idx0])[idx1] = t1
 					},
 				}, L)
 			},
@@ -130,7 +130,7 @@ func luaAccessMatrix(L *lua.LState) int {
 					L.ArgError(3, err.Error())
 				}
 
-				(p1.Elements)[idx0] = t0
+				(recv.Elements)[idx0] = t0
 			},
 		}, L))
 
@@ -145,7 +145,7 @@ func luaAccessMatrix(L *lua.LState) int {
 }
 
 func luaSetMatrix(L *lua.LState) int {
-	p1 := luaCheckMatrix(1, L)
+	recv := luaCheckMatrix(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
@@ -177,7 +177,7 @@ func luaSetMatrix(L *lua.LState) int {
 			L.ArgError(3, err.Error())
 		}
 
-		p1.Elements = ud
+		recv.Elements = ud
 
 	default:
 		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))

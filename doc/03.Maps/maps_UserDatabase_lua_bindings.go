@@ -97,14 +97,14 @@ func luaCheckUserDatabase(param int, L *lua.LState) *UserDatabase {
 }
 
 func luaAccessUserDatabase(L *lua.LState) int {
-	p1 := luaCheckUserDatabase(1, L)
+	recv := luaCheckUserDatabase(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "users":
 		L.Push(gobindlua.NewUserData(&gobindlua.LuaMap{
-			Map: p1.Users,
-			Len: func() int { return len(p1.Users) },
+			Map: recv.Users,
+			Len: func() int { return len(recv.Users) },
 			GetValue: func(key0 lua.LValue) lua.LValue {
 
 				keyVal0_n, ok := key0.(lua.LNumber)
@@ -115,7 +115,7 @@ func luaAccessUserDatabase(L *lua.LState) int {
 
 				keyVal0 := int(keyVal0_n)
 
-				ret0 := (p1.Users)[(int)(keyVal0)]
+				ret0 := (recv.Users)[(int)(keyVal0)]
 				return gobindlua.NewUserData(&ret0, L)
 			},
 			SetValue: func(key0 lua.LValue, val0 lua.LValue) {
@@ -140,10 +140,10 @@ func luaAccessUserDatabase(L *lua.LState) int {
 					gobindlua.TableElemCastError(L, 1, "User", val0)
 				}
 
-				(p1.Users)[(int)(keyVal0)] = (User)(*valVal0)
+				(recv.Users)[(int)(keyVal0)] = (User)(*valVal0)
 			},
 			ForEach: func(f0 func(k0, v0 lua.LValue)) {
-				for k0_iter, v0_iter := range p1.Users {
+				for k0_iter, v0_iter := range recv.Users {
 					retKey0 := k0_iter
 					ret0 := v0_iter
 					key0 := (lua.LNumber)(retKey0)
@@ -161,7 +161,7 @@ func luaAccessUserDatabase(L *lua.LState) int {
 }
 
 func luaSetUserDatabase(L *lua.LState) int {
-	p1 := luaCheckUserDatabase(1, L)
+	recv := luaCheckUserDatabase(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
@@ -196,7 +196,7 @@ func luaSetUserDatabase(L *lua.LState) int {
 			L.ArgError(3, err.Error())
 		}
 
-		p1.Users = ud
+		recv.Users = ud
 
 	default:
 		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))

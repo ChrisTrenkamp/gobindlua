@@ -78,15 +78,15 @@ func luaCheckArrayStruct(param int, L *lua.LState) *ArrayStruct {
 }
 
 func luaAccessArrayStruct(L *lua.LState) int {
-	p1 := luaCheckArrayStruct(1, L)
+	recv := luaCheckArrayStruct(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "elements":
 		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
-			Slice: p1.Elements,
-			Len:   func() int { return len(p1.Elements) },
-			Index: func(idx0 int) lua.LValue { return (lua.LNumber)((p1.Elements)[idx0]) },
+			Slice: recv.Elements,
+			Len:   func() int { return len(recv.Elements) },
+			Index: func(idx0 int) lua.LValue { return (lua.LNumber)((recv.Elements)[idx0]) },
 			SetIndex: func(idx0 int, val0 lua.LValue) {
 
 				t0_n, ok := val0.(lua.LNumber)
@@ -97,7 +97,7 @@ func luaAccessArrayStruct(L *lua.LState) int {
 
 				t0 := float32(t0_n)
 
-				(p1.Elements)[idx0] = t0
+				(recv.Elements)[idx0] = t0
 			},
 		}, L))
 
@@ -118,7 +118,7 @@ func luaAccessArrayStruct(L *lua.LState) int {
 }
 
 func luaSetArrayStruct(L *lua.LState) int {
-	p1 := luaCheckArrayStruct(1, L)
+	recv := luaCheckArrayStruct(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
@@ -143,7 +143,7 @@ func luaSetArrayStruct(L *lua.LState) int {
 
 		ud := (*[3]float32)(udsl)
 
-		p1.Elements = *ud
+		recv.Elements = *ud
 
 	default:
 		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))

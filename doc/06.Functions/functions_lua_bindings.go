@@ -126,15 +126,15 @@ func luaFunctionDoFunc(L *lua.LState) int {
 
 			L.Call(2, 1)
 
-			r0l_n, ok := L.Get(2).(lua.LString)
+			r0l_n, ok := L.Get(-1).(lua.LString)
 
 			if !ok {
-				gobindlua.FuncResCastError(L, 1, "string", L.Get(2))
+				gobindlua.FuncResCastError(L, 1, "string", L.Get(-1))
 			}
 
 			r0l := string(r0l_n)
 
-			L.Pop(1 + 1)
+			L.Pop(1)
 
 			return r0l
 		}

@@ -52,18 +52,18 @@ func luaCheckMammalList(param int, L *lua.LState) *MammalList {
 }
 
 func luaAccessMammalList(L *lua.LState) int {
-	p1 := luaCheckMammalList(1, L)
+	recv := luaCheckMammalList(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "pet":
-		L.Push(gobindlua.NewUserData(p1.Pet, L))
+		L.Push(gobindlua.NewUserData(recv.Pet, L))
 
 	case "non_pets":
 		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
-			Slice: p1.NonPets,
-			Len:   func() int { return len(p1.NonPets) },
-			Index: func(idx0 int) lua.LValue { return gobindlua.NewUserData((p1.NonPets)[idx0], L) },
+			Slice: recv.NonPets,
+			Len:   func() int { return len(recv.NonPets) },
+			Index: func(idx0 int) lua.LValue { return gobindlua.NewUserData((recv.NonPets)[idx0], L) },
 			SetIndex: func(idx0 int, val0 lua.LValue) {
 
 				t0_ud, ok := val0.(*lua.LUserData)
@@ -78,7 +78,7 @@ func luaAccessMammalList(L *lua.LState) int {
 					gobindlua.TableElemCastError(L, 1, "mammal.Mammal", val0)
 				}
 
-				(p1.NonPets)[idx0] = t0
+				(recv.NonPets)[idx0] = t0
 			},
 		}, L))
 
@@ -90,7 +90,7 @@ func luaAccessMammalList(L *lua.LState) int {
 }
 
 func luaSetMammalList(L *lua.LState) int {
-	p1 := luaCheckMammalList(1, L)
+	recv := luaCheckMammalList(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
@@ -102,7 +102,7 @@ func luaSetMammalList(L *lua.LState) int {
 			gobindlua.CastArgError(L, 3, "mammal.Mammal", L.CheckUserData(3))
 		}
 
-		p1.Pet = ud
+		recv.Pet = ud
 
 	case "non_pets":
 
@@ -127,7 +127,7 @@ func luaSetMammalList(L *lua.LState) int {
 			L.ArgError(3, err.Error())
 		}
 
-		p1.NonPets = ud
+		recv.NonPets = ud
 
 	default:
 		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))

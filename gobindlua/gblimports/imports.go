@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
-	"github.com/ChrisTrenkamp/gobindlua/gobindlua/functiontype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
 	"golang.org/x/tools/go/packages"
 )
@@ -26,7 +25,7 @@ func NewImports(packageSource *packages.Package) Imports {
 	return ret
 }
 
-func (g Imports) AddPackageFromFunctions(f []functiontype.FunctionType) {
+func (g Imports) AddPackageFromFunctions(f []datatype.FunctionType) {
 	for _, i := range f {
 		for _, p := range i.Params {
 			g.AddPackage(p.DataType)

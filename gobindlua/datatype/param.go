@@ -1,16 +1,14 @@
-package param
+package datatype
 
 import (
 	"go/types"
-
-	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
 )
 
 type Param struct {
 	IsEllipses bool
 	ParamNum   int
 	LuaName    string
-	datatype.DataType
+	DataType
 }
 
 func (p *Param) ConvertLuaTypeToGo(variableToCreate string, luaVariable string, paramNum int) string {
@@ -26,7 +24,7 @@ func (p *Param) ConvertLuaTypeToGo(variableToCreate string, luaVariable string, 
 func (p *Param) LuaType(isFunctionReturn bool) string {
 	if p.IsEllipses {
 		if t, ok := p.DataType.Type.Underlying().(*types.Slice); ok {
-			elem := p.DataType.CreateDataTypeFrom(t.Elem())
+			elem := p.DataType.createDataTypeFrom(t.Elem())
 			return elem.LuaType(isFunctionReturn)
 		}
 	}

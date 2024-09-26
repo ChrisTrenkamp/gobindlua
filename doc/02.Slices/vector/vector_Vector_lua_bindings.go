@@ -109,15 +109,15 @@ func luaCheckVector(param int, L *lua.LState) *Vector {
 }
 
 func luaAccessVector(L *lua.LState) int {
-	p1 := luaCheckVector(1, L)
+	recv := luaCheckVector(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "elements":
 		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
-			Slice: p1.Elements,
-			Len:   func() int { return len(p1.Elements) },
-			Index: func(idx0 int) lua.LValue { return (lua.LNumber)((p1.Elements)[idx0]) },
+			Slice: recv.Elements,
+			Len:   func() int { return len(recv.Elements) },
+			Index: func(idx0 int) lua.LValue { return (lua.LNumber)((recv.Elements)[idx0]) },
 			SetIndex: func(idx0 int, val0 lua.LValue) {
 
 				t0_n, ok := val0.(lua.LNumber)
@@ -128,7 +128,7 @@ func luaAccessVector(L *lua.LState) int {
 
 				t0 := float64(t0_n)
 
-				(p1.Elements)[idx0] = t0
+				(recv.Elements)[idx0] = t0
 			},
 		}, L))
 
@@ -146,7 +146,7 @@ func luaAccessVector(L *lua.LState) int {
 }
 
 func luaSetVector(L *lua.LState) int {
-	p1 := luaCheckVector(1, L)
+	recv := luaCheckVector(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
@@ -169,7 +169,7 @@ func luaSetVector(L *lua.LState) int {
 			L.ArgError(3, err.Error())
 		}
 
-		p1.Elements = ud
+		recv.Elements = ud
 
 	default:
 		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))

@@ -10,9 +10,7 @@ import (
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
-	"github.com/ChrisTrenkamp/gobindlua/gobindlua/functiontype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
-	"github.com/ChrisTrenkamp/gobindlua/gobindlua/param"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -26,7 +24,7 @@ type InterfaceGenerator struct {
 	allDeclaredInterfaces []declaredinterface.DeclaredInterface
 	interfaceObject       types.Object
 
-	InterfaceMethods []functiontype.FunctionType
+	InterfaceMethods []datatype.FunctionType
 }
 
 func NewInterfaceGenerator(interfaceToGenerate, workingDir string, dependantModules []string) InterfaceGenerator {
@@ -71,8 +69,8 @@ func (g *InterfaceGenerator) loadSourcePackage() error {
 	return nil
 }
 
-func (g *InterfaceGenerator) gatherInterfaceMethods() []functiontype.FunctionType {
-	ret := make([]functiontype.FunctionType, 0)
+func (g *InterfaceGenerator) gatherInterfaceMethods() []datatype.FunctionType {
+	ret := make([]datatype.FunctionType, 0)
 	und := g.interfaceObject.Type().Underlying().(*types.Interface)
 
 	for i := 0; i < und.NumMethods(); i++ {
@@ -89,10 +87,10 @@ func (g *InterfaceGenerator) gatherInterfaceMethods() []functiontype.FunctionTyp
 	return ret
 }
 
-func (g *InterfaceGenerator) createFuncDecl(fn *types.Func) functiontype.FunctionType {
+func (g *InterfaceGenerator) createFuncDecl(fn *types.Func) datatype.FunctionType {
 	name := fn.Name()
 	luaName := gobindluautil.SnakeCase(name)
-	var params []param.Param
+	var params []datatype.Param
 	var ret []datatype.DataType
 	typ := fn.Type().(*types.Signature)
 
@@ -107,7 +105,7 @@ func (g *InterfaceGenerator) createFuncDecl(fn *types.Func) functiontype.Functio
 
 		// TODO: Ellipses are simply reported as slices.  While this is technically correct, it would be nice
 		// to properly detect ellipses.
-		params = append(params, param.Param{
+		params = append(params, datatype.Param{
 			IsEllipses: false,
 			ParamNum:   i,
 			LuaName:    luaName,
@@ -120,7 +118,7 @@ func (g *InterfaceGenerator) createFuncDecl(fn *types.Func) functiontype.Functio
 		ret = append(ret, datatype.CreateDataTypeFrom(r.Type(), g.packageSource, g.allDeclaredInterfaces))
 	}
 
-	return functiontype.FunctionType{
+	return datatype.FunctionType{
 		ActualFnName: name,
 		LuaFnName:    luaName,
 		SourceFnName: "",

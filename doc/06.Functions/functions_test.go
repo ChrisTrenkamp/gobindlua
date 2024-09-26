@@ -1,13 +1,16 @@
 package functions
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/ChrisTrenkamp/gobindlua"
 	lua "github.com/yuin/gopher-lua"
 )
 
 const script = `
 local functions = require "functions"
+local fn_container = require "fn_container"
 
 function lua_left_pad(str, pad)
 	local ret = ""
@@ -26,6 +29,9 @@ print("NotIncluded was excluded from the bindings: " .. tostring(functions.not_i
 --[[ You can seamlessly pass Lua and Go functions as parameters. ]]
 functions.do_func(lua_left_pad)
 functions.do_func(functions.go_left_pad)
+
+--[[ You can also assign methods to struct fields. ]]
+container = fn_container.new(lua_left_pad)
 `
 
 func Example() {
@@ -35,13 +41,19 @@ func Example() {
 	// For pure functions, we use the PreloadModule function instead of gobindlua.Register.
 	L.PreloadModule("functions", FunctionsModuleLoader)
 
+	gobindlua.Register(L, &FnContainer{})
+
 	if err := L.DoString(script); err != nil {
 		log.Fatal(err)
 	}
+
+	container := L.GetGlobal("container").(*lua.LUserData).Value.(*FnContainer)
+	fmt.Println(container.Fn(" hi lua from go!", 2))
 
 	// Output:
 	//[foo bar] [eggs ham]
 	//NotIncluded was excluded from the bindings: true
 	//Result of fn("foo", 3) call: lualualuafoo
 	//Result of fn("foo", 3) call: gogogofoo
+	//lualua hi lua from go!
 }

@@ -12,10 +12,8 @@ import (
 
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
-	"github.com/ChrisTrenkamp/gobindlua/gobindlua/functiontype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gblimports"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
-	"github.com/ChrisTrenkamp/gobindlua/gobindlua/param"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/structfield"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
@@ -32,8 +30,8 @@ type StructGenerator struct {
 	allDeclaredInterfaces []declaredinterface.DeclaredInterface
 	structObject          types.Object
 
-	StaticFunctions []functiontype.FunctionType
-	UserDataMethods []functiontype.FunctionType
+	StaticFunctions []datatype.FunctionType
+	UserDataMethods []datatype.FunctionType
 	Fields          []structfield.StructField
 	imports         gblimports.Imports
 }
@@ -115,12 +113,12 @@ func (g *StructGenerator) SourceUserDataSet() string {
 	return "luaSet" + g.StructToGenerate()
 }
 
-func (g *StructGenerator) gatherFunctionsToGenerate() []functiontype.FunctionType {
+func (g *StructGenerator) gatherFunctionsToGenerate() []datatype.FunctionType {
 	return g.gatherConstructors()
 }
 
-func (g *StructGenerator) gatherConstructors() []functiontype.FunctionType {
-	ret := make([]functiontype.FunctionType, 0)
+func (g *StructGenerator) gatherConstructors() []datatype.FunctionType {
+	ret := make([]datatype.FunctionType, 0)
 	underylingStructType := g.structObject.Type().Underlying()
 	constructorPrefix := "New" + g.structToGenerate
 
@@ -149,7 +147,7 @@ func (g *StructGenerator) gatherConstructors() []functiontype.FunctionType {
 						}
 
 						sourceCodeName := "luaConstructor" + g.StructToGenerate() + fnName
-						ret = append(ret, functiontype.CreateFunction(fn, false, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
+						ret = append(ret, datatype.CreateFunctionFromExpr(fn, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
 						break
 					}
 				}
@@ -160,8 +158,8 @@ func (g *StructGenerator) gatherConstructors() []functiontype.FunctionType {
 	return ret
 }
 
-func (g *StructGenerator) gatherReceivers() []functiontype.FunctionType {
-	ret := make([]functiontype.FunctionType, 0)
+func (g *StructGenerator) gatherReceivers() []datatype.FunctionType {
+	ret := make([]datatype.FunctionType, 0)
 	underylingStructType := g.structObject.Type().Underlying()
 
 	for _, syn := range g.packageSource.Syntax {
@@ -183,7 +181,7 @@ func (g *StructGenerator) gatherReceivers() []functiontype.FunctionType {
 					if recType.Type.Underlying() == underylingStructType {
 						luaName := gobindluautil.SnakeCase(fnName)
 						sourceCodeName := "luaMethod" + g.StructToGenerate() + fnName
-						ret = append(ret, functiontype.CreateFunction(fn, true, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
+						ret = append(ret, datatype.CreateFunctionFromExpr(fn, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
 						break
 					}
 				}
@@ -291,14 +289,14 @@ func (g *StructGenerator) generateStructAccessFunction(out io.Writer) {
 	templ := `
 func {{ .SourceUserDataAccess }}(L *lua.LState) int {
 	{{- if gt (len .Fields) 0 }}
-	p1 := {{ .UserDataCheckFn }}(1, L)
+	recv := {{ .UserDataCheckFn }}(1, L)
 	{{- end }}
 	p2 := L.CheckString(2)
 
 	switch p2 {
 		{{- range $idx, $field := .Fields }}
 	case "{{ $field.LuaName }}":
-		L.Push({{ $field.DataType.ConvertGoTypeToLua (printf "p1.%s" $field.FieldName) }})
+		L.Push({{ $field.DataType.ConvertGoTypeToLua (printf "recv.%s" $field.FieldName) }})
 		{{ end -}}
 
 		{{- range $idx, $method := .UserDataMethods }}
@@ -321,7 +319,7 @@ func (g *StructGenerator) generateStructSetFunction(out io.Writer) {
 	templ := `
 func {{ .SourceUserDataSet }}(L *lua.LState) int {
 	{{- if gt (len .Fields) 0 }}
-	p1 := {{ .UserDataCheckFn }}(1, L)
+	recv := {{ .UserDataCheckFn }}(1, L)
 	{{- end }}
 	p2 := L.CheckString(2)
 
@@ -329,7 +327,7 @@ func {{ .SourceUserDataSet }}(L *lua.LState) int {
 		{{- range $idx, $field := .Fields }}
 	case "{{ $field.LuaName }}":
 		{{ $field.DataType.ConvertLuaTypeToGo "ud" (printf "%s(3)" $field.DataType.LuaParamType) 3 }}
-		p1.{{ $field.FieldName }} = {{ $field.DataType.ReferenceOrDereferenceForAssignmentToField }}ud
+		recv.{{ $field.FieldName }} = {{ $field.DataType.ReferenceOrDereferenceForAssignmentToField }}ud
 		{{ end }}
 
 	default:
@@ -429,7 +427,7 @@ func (s *StructGenerator) implementsInterface(iface *types.Interface) bool {
 	return matchingMethods == numIfaceMethods
 }
 
-func (s *StructGenerator) methodParamsMatch(structParams []param.Param, interfaceParams *types.Tuple) bool {
+func (s *StructGenerator) methodParamsMatch(structParams []datatype.Param, interfaceParams *types.Tuple) bool {
 	if len(structParams) != interfaceParams.Len() {
 		return false
 	}

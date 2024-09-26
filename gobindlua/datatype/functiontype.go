@@ -1,17 +1,15 @@
-package functiontype
+package datatype
 
 import (
 	"bytes"
 	"fmt"
 	"go/ast"
+	"go/types"
 	"io"
 	"strings"
-	"text/template"
 
-	"github.com/ChrisTrenkamp/gobindlua/gobindlua/datatype"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/declaredinterface"
 	"github.com/ChrisTrenkamp/gobindlua/gobindlua/gobindluautil"
-	"github.com/ChrisTrenkamp/gobindlua/gobindlua/param"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -20,70 +18,51 @@ type FunctionType struct {
 	LuaFnName    string
 	SourceFnName string
 	Receiver     bool
-	Params       []param.Param
-	Ret          []datatype.DataType
+	Params       []Param
+	Ret          []DataType
 }
 
-func CreateFunction(fn *ast.FuncDecl, receiver bool, luaName, sourceCodeName string, packageSource *packages.Package, allDeclaredInterfaces []declaredinterface.DeclaredInterface) FunctionType {
-	params := make([]param.Param, 0)
-	ret := make([]datatype.DataType, 0)
+func CreateFunctionFromExpr(fn *ast.FuncDecl, luaFnName, goBindFnName string, packageSource *packages.Package, allDeclaredInterfaces []declaredinterface.DeclaredInterface) FunctionType {
+	actualName := fn.Name.Name
+	fnTyp := packageSource.TypesInfo.ObjectOf(fn.Name).Type().(*types.Signature)
+	return CreateFunction(fnTyp, actualName, luaFnName, goBindFnName, packageSource, allDeclaredInterfaces)
+}
 
-	if fn.Type != nil {
-		if fn.Type.Params != nil {
-			paramNum := 1
+func CreateFunction(typ *types.Signature, actualFnName, luaFnName, goBindFnName string, packageSource *packages.Package, allDeclaredInterfaces []declaredinterface.DeclaredInterface) FunctionType {
+	params := make([]Param, 0)
+	ret := make([]DataType, 0)
 
-			if receiver {
-				paramNum++
-			}
+	paramNum := 1
 
-			for _, i := range fn.Type.Params.List {
-				if len(i.Names) == 0 {
-					typ := datatype.CreateDataTypeFromExpr(i.Type, packageSource, allDeclaredInterfaces)
-					_, isEllipses := i.Type.(*ast.Ellipsis)
-					param := param.Param{
-						IsEllipses: isEllipses,
-						ParamNum:   paramNum,
-						LuaName:    "",
-						DataType:   typ,
-					}
-					params = append(params, param)
-					paramNum++
-				} else {
-					for _, name := range i.Names {
-						typ := datatype.CreateDataTypeFromExpr(i.Type, packageSource, allDeclaredInterfaces)
-						_, isEllipses := i.Type.(*ast.Ellipsis)
-						luaName := gobindluautil.SnakeCase(name.Name)
-						param := param.Param{
-							IsEllipses: isEllipses,
-							ParamNum:   paramNum,
-							LuaName:    luaName,
-							DataType:   typ,
-						}
-						params = append(params, param)
-						paramNum++
-					}
-				}
-			}
-		}
+	if typ.Recv() != nil {
+		paramNum = 2
+	}
 
-		if fn.Type.Results != nil {
-			for _, i := range fn.Type.Results.List {
-				if len(i.Names) == 0 {
-					ret = append(ret, datatype.CreateDataTypeFromExpr(i.Type, packageSource, allDeclaredInterfaces))
-				} else {
-					for range i.Names {
-						ret = append(ret, datatype.CreateDataTypeFromExpr(i.Type, packageSource, allDeclaredInterfaces))
-					}
-				}
-			}
-		}
+	for i := 0; i < typ.Params().Len(); i++ {
+		param := typ.Params().At(i)
+		paramType := CreateDataTypeFrom(param.Type(), packageSource, allDeclaredInterfaces)
+		luaName := gobindluautil.SnakeCase(param.Name())
+		isEllipses := i == typ.Params().Len()-1 && typ.Variadic()
+		params = append(params, Param{
+			IsEllipses: isEllipses,
+			ParamNum:   paramNum,
+			LuaName:    luaName,
+			DataType:   paramType,
+		})
+		paramNum++
+	}
+
+	for i := 0; i < typ.Results().Len(); i++ {
+		res := typ.Results().At(i)
+		resTyp := CreateDataTypeFrom(res.Type(), packageSource, allDeclaredInterfaces)
+		ret = append(ret, resTyp)
 	}
 
 	return FunctionType{
-		ActualFnName: fn.Name.Name,
-		LuaFnName:    luaName,
-		SourceFnName: sourceCodeName,
-		Receiver:     receiver,
+		ActualFnName: actualFnName,
+		LuaFnName:    luaFnName,
+		SourceFnName: goBindFnName,
+		Receiver:     typ.Recv() != nil,
 		Params:       params,
 		Ret:          ret,
 	}
@@ -108,8 +87,8 @@ func (f *FunctionType) GenerateLuaFunctionWrapper(out io.Writer, userDataCheckFn
 	}
 
 	templ := `
-func {{ .FunctionType.SourceFnName }}(L *lua.LState) int {
-	{{ if .FunctionType.Receiver -}}
+func {{ .SourceFnName }}(L *lua.LState) int {
+	{{ if .Receiver -}}
 		r := {{ .UserDataCheckFn }}(1, L)
 	{{- end }}
 	{{ range $idx, $param := .Params }}
@@ -121,7 +100,7 @@ func {{ .FunctionType.SourceFnName }}(L *lua.LState) int {
 			p{{ $idx }} = {{ $param.ReferenceOrDereferenceForAssignmentToField }}ud
 		}
 	{{ end }}
-	{{ .FunctionType.GenerateReturnValues "r" }} {{ if .FunctionType.Receiver -}}r.{{ end }}{{ .FunctionType.ActualFnName  }}({{ .FunctionType.GenerateParamValues "p" }})
+	{{ .GenerateReturnValues "r" }} {{ if .Receiver -}}r.{{ end }}{{ .ActualFnName  }}({{ .GenerateParamValues "p" }})
 
 	{{ range $idx, $ret := .Ret -}}
 		{{- if $ret.IsError -}}
@@ -138,11 +117,11 @@ func {{ .FunctionType.SourceFnName }}(L *lua.LState) int {
 		{{- end -}}
 	{{- end }}
 
-	return {{ .FunctionType.NumReturns }}
+	return {{ .NumReturns }}
 }
 `
 
-	execTempl(out, FunctionGenerator{userDataCheckFnName, f}, templ)
+	execTemplString(out, FunctionGenerator{userDataCheckFnName, f}, templ)
 }
 
 func (f *FunctionType) GenerateReturnValues(prefix string) string {
@@ -182,7 +161,7 @@ func (f *FunctionType) GenerateLuaFunctionParamRetDefinitions() string {
 ---@param ... {{ $param.LuaType false }}
 {{ else -}}
 {{ if ne $param.LuaName "" -}}
----@param {{ $param.LuaName }} {{ $param.DataType.LuaType false }}
+---@param {{ $param.LuaName }} {{ $param.LuaType false }}
 {{ end -}}
 {{- end -}}
 {{- end -}}
@@ -193,7 +172,7 @@ func (f *FunctionType) GenerateLuaFunctionParamRetDefinitions() string {
 {{- end -}}
 `
 
-	execTempl(&out, f, templ)
+	execTemplString(&out, f, templ)
 
 	return out.String()
 }
@@ -210,13 +189,4 @@ func (f *FunctionType) GenerateLuaFunctionParamStubs() string {
 	}
 
 	return strings.Join(ret, ", ")
-}
-
-func execTempl(out io.Writer, data any, templ string) {
-	t := template.Must(template.New("").Parse(templ))
-	err := t.Execute(out, data)
-
-	if err != nil {
-		panic(err)
-	}
 }

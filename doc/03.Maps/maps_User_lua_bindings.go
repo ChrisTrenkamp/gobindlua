@@ -72,18 +72,18 @@ func luaCheckUser(param int, L *lua.LState) *User {
 }
 
 func luaAccessUser(L *lua.LState) int {
-	p1 := luaCheckUser(1, L)
+	recv := luaCheckUser(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "name":
-		L.Push((lua.LString)(p1.Name))
+		L.Push((lua.LString)(recv.Name))
 
 	case "age":
-		L.Push((lua.LNumber)(p1.Age))
+		L.Push((lua.LNumber)(recv.Age))
 
 	case "email":
-		L.Push((lua.LString)(p1.Email))
+		L.Push((lua.LString)(recv.Email))
 
 	default:
 		L.Push(lua.LNil)
@@ -93,21 +93,21 @@ func luaAccessUser(L *lua.LState) int {
 }
 
 func luaSetUser(L *lua.LState) int {
-	p1 := luaCheckUser(1, L)
+	recv := luaCheckUser(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "name":
 		ud := string(L.CheckString(3))
-		p1.Name = ud
+		recv.Name = ud
 
 	case "age":
 		ud := int(L.CheckNumber(3))
-		p1.Age = ud
+		recv.Age = ud
 
 	case "email":
 		ud := string(L.CheckString(3))
-		p1.Email = ud
+		recv.Email = ud
 
 	default:
 		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))

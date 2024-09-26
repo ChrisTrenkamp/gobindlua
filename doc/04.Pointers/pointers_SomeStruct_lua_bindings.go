@@ -41,14 +41,14 @@ func luaCheckSomeStruct(param int, L *lua.LState) *SomeStruct {
 }
 
 func luaAccessSomeStruct(L *lua.LState) int {
-	p1 := luaCheckSomeStruct(1, L)
+	recv := luaCheckSomeStruct(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
 	case "a":
 		L.Push(gobindlua.NewUserData(&gobindlua.LuaMap{
-			Map: p1.A,
-			Len: func() int { return len(*p1.A) },
+			Map: recv.A,
+			Len: func() int { return len(*recv.A) },
 			GetValue: func(key0 lua.LValue) lua.LValue {
 
 				keyVal0_n, ok := key0.(lua.LString)
@@ -59,7 +59,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 
 				keyVal0 := string(keyVal0_n)
 
-				ret0 := (*p1.A)[(*string)(&keyVal0)]
+				ret0 := (*recv.A)[(*string)(&keyVal0)]
 				return gobindlua.NewUserData(&gobindlua.LuaMap{
 					Map: ret0,
 					Len: func() int { return len(*ret0) },
@@ -192,10 +192,10 @@ func luaAccessSomeStruct(L *lua.LState) int {
 					L.ArgError(3, err.Error())
 				}
 
-				(*p1.A)[(*string)(&keyVal0)] = (*map[string]*[]string)(&valVal0)
+				(*recv.A)[(*string)(&keyVal0)] = (*map[string]*[]string)(&valVal0)
 			},
 			ForEach: func(f0 func(k0, v0 lua.LValue)) {
-				for k0_iter, v0_iter := range *p1.A {
+				for k0_iter, v0_iter := range *recv.A {
 					retKey0 := k0_iter
 					ret0 := v0_iter
 					key0 := (lua.LString)(*retKey0)
@@ -292,20 +292,20 @@ func luaAccessSomeStruct(L *lua.LState) int {
 		}, L))
 
 	case "b":
-		L.Push(gobindlua.NewUserData(p1.B, L))
+		L.Push(gobindlua.NewUserData(recv.B, L))
 
 	case "c":
-		L.Push(gobindlua.NewUserData(&p1.C, L))
+		L.Push(gobindlua.NewUserData(&recv.C, L))
 
 	case "d":
 		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
-			Slice: p1.D,
-			Len:   func() int { return len(*p1.D) },
+			Slice: recv.D,
+			Len:   func() int { return len(*recv.D) },
 			Index: func(idx0 int) lua.LValue {
 				return gobindlua.NewUserData(&gobindlua.LuaArray{
-					Slice: (*p1.D)[idx0],
-					Len:   func() int { return len(*(*p1.D)[idx0]) },
-					Index: func(idx1 int) lua.LValue { return (lua.LNumber)(*(*(*p1.D)[idx0])[idx1]) },
+					Slice: (*recv.D)[idx0],
+					Len:   func() int { return len(*(*recv.D)[idx0]) },
+					Index: func(idx1 int) lua.LValue { return (lua.LNumber)(*(*(*recv.D)[idx0])[idx1]) },
 					SetIndex: func(idx1 int, val1 lua.LValue) {
 
 						t1_n, ok := val1.(lua.LNumber)
@@ -316,7 +316,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 
 						t1 := int(t1_n)
 
-						(*(*p1.D)[idx0])[idx1] = &t1
+						(*(*recv.D)[idx0])[idx1] = &t1
 					},
 				}, L)
 			},
@@ -339,19 +339,19 @@ func luaAccessSomeStruct(L *lua.LState) int {
 					L.ArgError(3, err.Error())
 				}
 
-				(*p1.D)[idx0] = &t0
+				(*recv.D)[idx0] = &t0
 			},
 		}, L))
 
 	case "e":
 		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
-			Slice: p1.E,
-			Len:   func() int { return len(*p1.E) },
+			Slice: recv.E,
+			Len:   func() int { return len(*recv.E) },
 			Index: func(idx0 int) lua.LValue {
 				return gobindlua.NewUserData(&gobindlua.LuaArray{
-					Slice: (*p1.E)[idx0],
-					Len:   func() int { return len((*p1.E)[idx0]) },
-					Index: func(idx1 int) lua.LValue { return gobindlua.NewUserData(((*p1.E)[idx0])[idx1], L) },
+					Slice: (*recv.E)[idx0],
+					Len:   func() int { return len((*recv.E)[idx0]) },
+					Index: func(idx1 int) lua.LValue { return gobindlua.NewUserData(((*recv.E)[idx0])[idx1], L) },
 					SetIndex: func(idx1 int, val1 lua.LValue) {
 
 						t1_ud, ok := val1.(*lua.LUserData)
@@ -366,7 +366,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 							gobindlua.TableElemCastError(L, 2, "Sub", val1)
 						}
 
-						((*p1.E)[idx0])[idx1] = t1
+						((*recv.E)[idx0])[idx1] = t1
 					},
 				}, L)
 			},
@@ -393,18 +393,18 @@ func luaAccessSomeStruct(L *lua.LState) int {
 					L.ArgError(3, err.Error())
 				}
 
-				(*p1.E)[idx0] = t0
+				(*recv.E)[idx0] = t0
 			},
 		}, L))
 
 	case "f":
 		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
-			Slice: p1.F,
-			Len:   func() int { return len(p1.F) },
+			Slice: recv.F,
+			Len:   func() int { return len(recv.F) },
 			Index: func(idx0 int) lua.LValue {
 				return gobindlua.NewUserData(&gobindlua.LuaMap{
-					Map: (p1.F)[idx0],
-					Len: func() int { return len((p1.F)[idx0]) },
+					Map: (recv.F)[idx0],
+					Len: func() int { return len((recv.F)[idx0]) },
 					GetValue: func(key1 lua.LValue) lua.LValue {
 
 						keyVal1_ud, ok := key1.(*lua.LUserData)
@@ -419,7 +419,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 							gobindlua.TableElemCastError(L, 2, "Sub", key1)
 						}
 
-						ret1 := ((p1.F)[idx0])[(*Sub)(keyVal1)]
+						ret1 := ((recv.F)[idx0])[(*Sub)(keyVal1)]
 						return (lua.LNumber)(*(ret1))
 					},
 					SetValue: func(key1 lua.LValue, val1 lua.LValue) {
@@ -444,10 +444,10 @@ func luaAccessSomeStruct(L *lua.LState) int {
 
 						valVal1 := int(valVal1_n)
 
-						((p1.F)[idx0])[(*Sub)(keyVal1)] = (*int)(&valVal1)
+						((recv.F)[idx0])[(*Sub)(keyVal1)] = (*int)(&valVal1)
 					},
 					ForEach: func(f1 func(k1, v1 lua.LValue)) {
-						for k1_iter, v1_iter := range (p1.F)[idx0] {
+						for k1_iter, v1_iter := range (recv.F)[idx0] {
 							retKey1 := k1_iter
 							ret1 := v1_iter
 							key1 := gobindlua.NewUserData(retKey1, L)
@@ -488,7 +488,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 					L.ArgError(3, err.Error())
 				}
 
-				(p1.F)[idx0] = t0
+				(recv.F)[idx0] = t0
 			},
 		}, L))
 
@@ -500,7 +500,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 }
 
 func luaSetSomeStruct(L *lua.LState) int {
-	p1 := luaCheckSomeStruct(1, L)
+	recv := luaCheckSomeStruct(1, L)
 	p2 := L.CheckString(2)
 
 	switch p2 {
@@ -557,7 +557,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 			L.ArgError(3, err.Error())
 		}
 
-		p1.A = &ud
+		recv.A = &ud
 
 	case "b":
 
@@ -567,7 +567,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 			gobindlua.CastArgError(L, 3, "Sub", L.CheckUserData(3))
 		}
 
-		p1.B = ud
+		recv.B = ud
 
 	case "c":
 
@@ -577,7 +577,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 			gobindlua.CastArgError(L, 3, "Sub", L.CheckUserData(3))
 		}
 
-		p1.C = *ud
+		recv.C = *ud
 
 	case "d":
 
@@ -607,7 +607,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 			L.ArgError(3, err.Error())
 		}
 
-		p1.D = &ud
+		recv.D = &ud
 
 	case "e":
 
@@ -641,7 +641,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 			L.ArgError(3, err.Error())
 		}
 
-		p1.E = &ud
+		recv.E = &ud
 
 	case "f":
 
@@ -683,7 +683,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 			L.ArgError(3, err.Error())
 		}
 
-		p1.F = ud
+		recv.F = ud
 
 	default:
 		L.ArgError(2, fmt.Sprintf("unknown field %s", p2))
