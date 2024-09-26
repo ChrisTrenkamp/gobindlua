@@ -9,7 +9,7 @@ import (
 )
 
 func (goType *SomeStruct) LuaModuleName() string {
-	return "some_struct"
+	return "SomeStruct"
 }
 
 func (goType *SomeStruct) LuaModuleLoader(L *lua.LState) int {
@@ -28,7 +28,7 @@ func (goType *SomeStruct) LuaRegisterGlobalMetatable(L *lua.LState) {
 }
 
 func (r *SomeStruct) LuaMetatableType() string {
-	return "some_struct_fields"
+	return "SomeStructTable"
 }
 
 func luaCheckSomeStruct(param int, L *lua.LState) *SomeStruct {
@@ -45,8 +45,8 @@ func luaAccessSomeStruct(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "a":
-		L.Push(gobindlua.NewUserData(&gobindlua.LuaMap{
+	case "A":
+		L.Push(gobindlua.NewUserData(&gobindlua.GblMap{
 			Map: recv.A,
 			Len: func() int { return len(*recv.A) },
 			GetValue: func(key0 lua.LValue) lua.LValue {
@@ -60,7 +60,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 				keyVal0 := string(keyVal0_n)
 
 				ret0 := (*recv.A)[(*string)(&keyVal0)]
-				return gobindlua.NewUserData(&gobindlua.LuaMap{
+				return gobindlua.NewUserData(&gobindlua.GblMap{
 					Map: ret0,
 					Len: func() int { return len(*ret0) },
 					GetValue: func(key1 lua.LValue) lua.LValue {
@@ -74,7 +74,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 						keyVal1 := string(keyVal1_n)
 
 						ret1 := (*ret0)[(string)(keyVal1)]
-						return gobindlua.NewUserData(&gobindlua.LuaArray{
+						return gobindlua.NewUserData(&gobindlua.GblSlice{
 							Slice: ret1,
 							Len:   func() int { return len(*ret1) },
 							Index: func(idx2 int) lua.LValue { return (lua.LString)((*ret1)[idx2]) },
@@ -126,7 +126,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 							retKey1 := k1_iter
 							ret1 := v1_iter
 							key1 := (lua.LString)(retKey1)
-							val1 := gobindlua.NewUserData(&gobindlua.LuaArray{
+							val1 := gobindlua.NewUserData(&gobindlua.GblSlice{
 								Slice: ret1,
 								Len:   func() int { return len(*ret1) },
 								Index: func(idx2 int) lua.LValue { return (lua.LString)((*ret1)[idx2]) },
@@ -199,7 +199,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 					retKey0 := k0_iter
 					ret0 := v0_iter
 					key0 := (lua.LString)(*retKey0)
-					val0 := gobindlua.NewUserData(&gobindlua.LuaMap{
+					val0 := gobindlua.NewUserData(&gobindlua.GblMap{
 						Map: ret0,
 						Len: func() int { return len(*ret0) },
 						GetValue: func(key1 lua.LValue) lua.LValue {
@@ -213,7 +213,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 							keyVal1 := string(keyVal1_n)
 
 							ret1 := (*ret0)[(string)(keyVal1)]
-							return gobindlua.NewUserData(&gobindlua.LuaArray{
+							return gobindlua.NewUserData(&gobindlua.GblSlice{
 								Slice: ret1,
 								Len:   func() int { return len(*ret1) },
 								Index: func(idx2 int) lua.LValue { return (lua.LString)((*ret1)[idx2]) },
@@ -265,7 +265,7 @@ func luaAccessSomeStruct(L *lua.LState) int {
 								retKey1 := k1_iter
 								ret1 := v1_iter
 								key1 := (lua.LString)(retKey1)
-								val1 := gobindlua.NewUserData(&gobindlua.LuaArray{
+								val1 := gobindlua.NewUserData(&gobindlua.GblSlice{
 									Slice: ret1,
 									Len:   func() int { return len(*ret1) },
 									Index: func(idx2 int) lua.LValue { return (lua.LString)((*ret1)[idx2]) },
@@ -291,18 +291,18 @@ func luaAccessSomeStruct(L *lua.LState) int {
 			},
 		}, L))
 
-	case "b":
+	case "B":
 		L.Push(gobindlua.NewUserData(recv.B, L))
 
-	case "c":
+	case "C":
 		L.Push(gobindlua.NewUserData(&recv.C, L))
 
-	case "d":
-		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
+	case "D":
+		L.Push(gobindlua.NewUserData(&gobindlua.GblSlice{
 			Slice: recv.D,
 			Len:   func() int { return len(*recv.D) },
 			Index: func(idx0 int) lua.LValue {
-				return gobindlua.NewUserData(&gobindlua.LuaArray{
+				return gobindlua.NewUserData(&gobindlua.GblSlice{
 					Slice: (*recv.D)[idx0],
 					Len:   func() int { return len(*(*recv.D)[idx0]) },
 					Index: func(idx1 int) lua.LValue { return (lua.LNumber)(*(*(*recv.D)[idx0])[idx1]) },
@@ -343,12 +343,12 @@ func luaAccessSomeStruct(L *lua.LState) int {
 			},
 		}, L))
 
-	case "e":
-		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
+	case "E":
+		L.Push(gobindlua.NewUserData(&gobindlua.GblSlice{
 			Slice: recv.E,
 			Len:   func() int { return len(*recv.E) },
 			Index: func(idx0 int) lua.LValue {
-				return gobindlua.NewUserData(&gobindlua.LuaArray{
+				return gobindlua.NewUserData(&gobindlua.GblSlice{
 					Slice: (*recv.E)[idx0],
 					Len:   func() int { return len((*recv.E)[idx0]) },
 					Index: func(idx1 int) lua.LValue { return gobindlua.NewUserData(((*recv.E)[idx0])[idx1], L) },
@@ -397,12 +397,12 @@ func luaAccessSomeStruct(L *lua.LState) int {
 			},
 		}, L))
 
-	case "f":
-		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
+	case "F":
+		L.Push(gobindlua.NewUserData(&gobindlua.GblSlice{
 			Slice: recv.F,
 			Len:   func() int { return len(recv.F) },
 			Index: func(idx0 int) lua.LValue {
-				return gobindlua.NewUserData(&gobindlua.LuaMap{
+				return gobindlua.NewUserData(&gobindlua.GblMap{
 					Map: (recv.F)[idx0],
 					Len: func() int { return len((recv.F)[idx0]) },
 					GetValue: func(key1 lua.LValue) lua.LValue {
@@ -504,7 +504,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "a":
+	case "A":
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoMap[*string, *map[string]*[]string](L.CheckAny(3), 0, func(key0, val0 lua.LValue) (*string, *map[string]*[]string) {
 
@@ -559,7 +559,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 
 		recv.A = &ud
 
-	case "b":
+	case "B":
 
 		ud, ok := L.CheckUserData(3).Value.(*Sub)
 
@@ -569,7 +569,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 
 		recv.B = ud
 
-	case "c":
+	case "C":
 
 		ud, ok := L.CheckUserData(3).Value.(*Sub)
 
@@ -579,7 +579,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 
 		recv.C = *ud
 
-	case "d":
+	case "D":
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[*[]*int](L.CheckAny(3), 0, func(val0 lua.LValue) *[]*int {
 
@@ -609,7 +609,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 
 		recv.D = &ud
 
-	case "e":
+	case "E":
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[[]*Sub](L.CheckAny(3), 0, func(val0 lua.LValue) []*Sub {
 
@@ -643,7 +643,7 @@ func luaSetSomeStruct(L *lua.LState) int {
 
 		recv.E = &ud
 
-	case "f":
+	case "F":
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[map[*Sub]*int](L.CheckAny(3), 0, func(val0 lua.LValue) map[*Sub]*int {
 

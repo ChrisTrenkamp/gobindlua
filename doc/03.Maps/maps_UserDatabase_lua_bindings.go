@@ -9,13 +9,13 @@ import (
 )
 
 func (goType *UserDatabase) LuaModuleName() string {
-	return "user_database"
+	return "UserDatabase"
 }
 
 func (goType *UserDatabase) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorUserDatabaseNewUserDatabase))
-	L.SetField(staticMethodsTable, "new_from", L.NewFunction(luaConstructorUserDatabaseNewUserDatabaseFrom))
+	L.SetField(staticMethodsTable, "NewUserDatabase", L.NewFunction(luaConstructorUserDatabaseNewUserDatabase))
+	L.SetField(staticMethodsTable, "NewUserDatabaseFrom", L.NewFunction(luaConstructorUserDatabaseNewUserDatabaseFrom))
 
 	L.Push(staticMethodsTable)
 
@@ -84,7 +84,7 @@ func luaConstructorUserDatabaseNewUserDatabaseFrom(L *lua.LState) int {
 }
 
 func (r *UserDatabase) LuaMetatableType() string {
-	return "user_database_fields"
+	return "UserDatabaseTable"
 }
 
 func luaCheckUserDatabase(param int, L *lua.LState) *UserDatabase {
@@ -101,8 +101,8 @@ func luaAccessUserDatabase(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "users":
-		L.Push(gobindlua.NewUserData(&gobindlua.LuaMap{
+	case "Users":
+		L.Push(gobindlua.NewUserData(&gobindlua.GblMap{
 			Map: recv.Users,
 			Len: func() int { return len(recv.Users) },
 			GetValue: func(key0 lua.LValue) lua.LValue {
@@ -165,7 +165,7 @@ func luaSetUserDatabase(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "users":
+	case "Users":
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoMap[int, User](L.CheckAny(3), 0, func(key0, val0 lua.LValue) (int, User) {
 

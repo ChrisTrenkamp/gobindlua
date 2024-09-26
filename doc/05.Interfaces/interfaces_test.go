@@ -12,19 +12,19 @@ import (
 )
 
 const script = `
-local dog = require "dog"
-local lion = require "lion"
-local human = require "human"
-local mammal_list = require "mammal_list"
+local Dog = require "Dog"
+local Lion = require "Lion"
+local Human = require "Human"
+local MammalList = require "MammalList"
 
-local mammals = mammal_list.new()
-mammals.pet = dog.new()
-mammals.non_pets = { lion.new(), human.new() }
+local mammals = MammalList.NewMammalList()
+mammals.Pet = Dog.NewDog()
+mammals.NonPets = { Lion.NewLion(), Human.NewHuman() }
 
-print("My pet says: " .. mammals.pet:sound())
+print("My pet says: " .. mammals.Pet:Sound())
 print("The other mammals say:")
-for i=1,#mammals.non_pets,1 do
-	print(mammals.non_pets[i]:sound())
+for i=1,#mammals.NonPets,1 do
+	print(mammals.NonPets[i]:Sound())
 end
 `
 

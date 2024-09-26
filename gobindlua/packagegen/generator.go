@@ -69,7 +69,7 @@ func (g *PackageGenerator) PackageToGenerateFunctionName() string {
 }
 
 func (g *PackageGenerator) PackageToGenerateMetatableName() string {
-	return g.packageToGenerate
+	return gobindluautil.LookupCustomName(g.packageToGenerate)
 }
 
 func (g *PackageGenerator) gatherAllFunctions() []datatype.FunctionType {
@@ -84,7 +84,7 @@ func (g *PackageGenerator) gatherAllFunctions() []datatype.FunctionType {
 					continue
 				}
 
-				luaName := gobindluautil.SnakeCase(fnName)
+				luaName := gobindluautil.LookupCustomName(fnName)
 				sourceCodeName := "luaFunction" + fnName
 				ret = append(ret, datatype.CreateFunctionFromExpr(fn, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
 			}
@@ -112,7 +112,15 @@ func (g *PackageGenerator) generateGoCode() ([]byte, error) {
 
 func (g *PackageGenerator) buildMetatableInitFunction(out io.Writer) {
 	templ := `
-func {{ .PackageToGenerateFunctionName }}(L *lua.LState) int {
+func LuaPreloadModule(L *lua.LState) {
+	L.PreloadModule("{{ .PackageToGenerateMetatableName }}", luaPackageModuleLoader)
+}
+`
+
+	execTempl(out, g, templ)
+
+	templ = `
+func luaPackageModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
 	{{ range $idx, $fn := .StaticFunctions -}}
 		L.SetField(staticMethodsTable, "{{ $fn.LuaFnName }}", L.NewFunction({{ $fn.SourceFnName }}))

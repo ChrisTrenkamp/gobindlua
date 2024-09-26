@@ -23,19 +23,14 @@ type PrimitiveStruct struct {
 	// Notice how `lua_PrimitiveStruct.go` will properly cast the float64 to this named type
 	MyFloat primitivesubpackage.SomeFloat64
 	// You can use tags to explicitly declare the Lua name of the field.
-	SomeString string `gobindlua:"my_string"`
+	SomeString string `gobindlua:"MyString"`
 	// You can also exclude fields
 	WillBeExcluded   string `gobindlua:"-"`
 	MySpecializedInt SpecializedInt
 }
 
 // Use the gobindlua:constructor directive to declare a function as a
-// constructor in the Lua bindings.  If there's multiple return values, the first value
-// MUST be the struct you're creating bindings for.  The return type can be a pointer as well.
-// If constructors have a name that matches New(StructName)[OptionalQualifier],
-// they will be added as a metatable field in the form of new[_optional_qualifier].
-// Otherwise, the function will be added with the original name, but in snake_case form.
-// This function will be added as "new".
+// constructor in the Lua bindings.
 //
 //gobindlua:constructor
 func NewPrimitiveStruct() PrimitiveStruct {

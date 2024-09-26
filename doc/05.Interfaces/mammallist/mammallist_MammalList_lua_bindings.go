@@ -10,12 +10,12 @@ import (
 )
 
 func (goType *MammalList) LuaModuleName() string {
-	return "mammal_list"
+	return "MammalList"
 }
 
 func (goType *MammalList) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorMammalListNewMammalList))
+	L.SetField(staticMethodsTable, "NewMammalList", L.NewFunction(luaConstructorMammalListNewMammalList))
 
 	L.Push(staticMethodsTable)
 
@@ -39,7 +39,7 @@ func luaConstructorMammalListNewMammalList(L *lua.LState) int {
 }
 
 func (r *MammalList) LuaMetatableType() string {
-	return "mammal_list_fields"
+	return "MammalListTable"
 }
 
 func luaCheckMammalList(param int, L *lua.LState) *MammalList {
@@ -56,11 +56,11 @@ func luaAccessMammalList(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "pet":
+	case "Pet":
 		L.Push(gobindlua.NewUserData(recv.Pet, L))
 
-	case "non_pets":
-		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
+	case "NonPets":
+		L.Push(gobindlua.NewUserData(&gobindlua.GblSlice{
 			Slice: recv.NonPets,
 			Len:   func() int { return len(recv.NonPets) },
 			Index: func(idx0 int) lua.LValue { return gobindlua.NewUserData((recv.NonPets)[idx0], L) },
@@ -94,7 +94,7 @@ func luaSetMammalList(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "pet":
+	case "Pet":
 
 		ud, ok := L.CheckUserData(3).Value.(mammal.Mammal)
 
@@ -104,7 +104,7 @@ func luaSetMammalList(L *lua.LState) int {
 
 		recv.Pet = ud
 
-	case "non_pets":
+	case "NonPets":
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[mammal.Mammal](L.CheckAny(3), 0, func(val0 lua.LValue) mammal.Mammal {
 

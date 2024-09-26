@@ -9,12 +9,12 @@ import (
 )
 
 func (goType *Sub) LuaModuleName() string {
-	return "sub"
+	return "Sub"
 }
 
 func (goType *Sub) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorSubNewSub))
+	L.SetField(staticMethodsTable, "NewSub", L.NewFunction(luaConstructorSubNewSub))
 
 	L.Push(staticMethodsTable)
 
@@ -45,7 +45,7 @@ func luaConstructorSubNewSub(L *lua.LState) int {
 }
 
 func (r *Sub) LuaMetatableType() string {
-	return "sub_fields"
+	return "SubTable"
 }
 
 func luaCheckSub(param int, L *lua.LState) *Sub {
@@ -62,7 +62,7 @@ func luaAccessSub(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "str":
+	case "Str":
 		L.Push((lua.LString)(*recv.Str))
 
 	default:
@@ -77,7 +77,7 @@ func luaSetSub(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "str":
+	case "Str":
 		ud := string(L.CheckString(3))
 		recv.Str = &ud
 

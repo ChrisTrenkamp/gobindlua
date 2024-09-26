@@ -10,38 +10,38 @@ import (
 )
 
 const script = `
-local user = require "user"
-local user_database = require "user_database"
-local gbl_map = require "gbl_map"
+local User = require "User"
+local UserDatabase = require "UserDatabase"
+local GblMap = require "GblMap"
 
-local user1 = user.new("Mike Smith", 42, "mike.smith@example.com")
-local user2 = user.new("Ryan Kennedy", 23, "rkennedy04021@nyu.com")
-local user3 = user.new("Robert Rose", 70, "rrose00011@aol.com")
+local user1 = User.NewUser("Mike Smith", 42, "mike.smith@example.com")
+local user2 = User.NewUser("Ryan Kennedy", 23, "rkennedy04021@nyu.com")
+local user3 = User.NewUser("Robert Rose", 70, "rrose00011@aol.com")
 
 --[[ Just like slices, you can use tables to construct Go maps. ]]
-local db = user_database.new_from(
+local db = UserDatabase.NewUserDatabaseFrom(
 	{
 		[10]=user1,
 		[11]=user2,
 	}
 )
 
-print("db size: " .. tostring(#db.users))
-db.users[12]=user3
+print("db size: " .. tostring(#db.Users))
+db.Users[12]=user3
 
 print("Directly indexing the Go map:")
-print("db.users[10]: " .. db.users[10].name)
-print("db.users[11]: " .. db.users[11].name)
-print("db.users[12]: " .. db.users[12].name)
+print("db.users[10]: " .. db.Users[10].Name)
+print("db.users[11]: " .. db.Users[11].Name)
+print("db.users[12]: " .. db.Users[12].Name)
 
-user_db.users = db.users
+user_db.Users = db.Users
 
 --[[ And you can convert maps back to tables. ]]
-local db_table = gbl_map.to_table(db.users)
+local db_table = GblMap.ToTable(db.Users)
 
 print("Indexing the Lua table:")
 for k,v in pairs(db_table) do
-	print("db_table[" .. tostring(k) .. "] = " .. v.name)
+	print("db_table[" .. tostring(k) .. "] = " .. v.Name)
 end
 `
 

@@ -9,12 +9,12 @@ import (
 )
 
 func (goType *Dog) LuaModuleName() string {
-	return "dog"
+	return "Dog"
 }
 
 func (goType *Dog) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorDogNewDog))
+	L.SetField(staticMethodsTable, "NewDog", L.NewFunction(luaConstructorDogNewDog))
 
 	L.Push(staticMethodsTable)
 
@@ -38,7 +38,7 @@ func luaConstructorDogNewDog(L *lua.LState) int {
 }
 
 func (r *Dog) LuaMetatableType() string {
-	return "dog_fields"
+	return "DogTable"
 }
 
 func luaCheckDog(param int, L *lua.LState) *Dog {
@@ -54,7 +54,7 @@ func luaAccessDog(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "sound":
+	case "Sound":
 		L.Push(L.NewFunction(luaMethodDogSound))
 
 	default:

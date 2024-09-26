@@ -9,13 +9,13 @@ import (
 )
 
 func (goType *Vector) LuaModuleName() string {
-	return "vector"
+	return "Vector"
 }
 
 func (goType *Vector) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new_from", L.NewFunction(luaConstructorVectorNewVectorFrom))
-	L.SetField(staticMethodsTable, "new_variadic", L.NewFunction(luaConstructorVectorNewVectorVariadic))
+	L.SetField(staticMethodsTable, "NewVectorFrom", L.NewFunction(luaConstructorVectorNewVectorFrom))
+	L.SetField(staticMethodsTable, "NewVectorVariadic", L.NewFunction(luaConstructorVectorNewVectorVariadic))
 
 	L.Push(staticMethodsTable)
 
@@ -96,7 +96,7 @@ func luaConstructorVectorNewVectorVariadic(L *lua.LState) int {
 }
 
 func (r *Vector) LuaMetatableType() string {
-	return "vector_fields"
+	return "VectorTable"
 }
 
 func luaCheckVector(param int, L *lua.LState) *Vector {
@@ -113,8 +113,8 @@ func luaAccessVector(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "elements":
-		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
+	case "Elements":
+		L.Push(gobindlua.NewUserData(&gobindlua.GblSlice{
 			Slice: recv.Elements,
 			Len:   func() int { return len(recv.Elements) },
 			Index: func(idx0 int) lua.LValue { return (lua.LNumber)((recv.Elements)[idx0]) },
@@ -132,10 +132,10 @@ func luaAccessVector(L *lua.LState) int {
 			},
 		}, L))
 
-	case "inner_product":
+	case "InnerProduct":
 		L.Push(L.NewFunction(luaMethodVectorInnerProduct))
 
-	case "outer_product":
+	case "OuterProduct":
 		L.Push(L.NewFunction(luaMethodVectorOuterProduct))
 
 	default:
@@ -150,7 +150,7 @@ func luaSetVector(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "elements":
+	case "Elements":
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[float64](L.CheckAny(3), 0, func(val0 lua.LValue) float64 {
 

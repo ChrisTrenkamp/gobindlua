@@ -10,7 +10,7 @@ import (
 
 const script = `
 local functions = require "functions"
-local fn_container = require "fn_container"
+local FnContainer = require "FnContainer"
 
 function lua_left_pad(str, pad)
 	local ret = ""
@@ -22,24 +22,24 @@ function lua_left_pad(str, pad)
 	return ret .. str
 end
 
-functions.print_me(functions.split("foo_bar", "_"), functions.split("eggs&ham", "&"))
+functions.PrintMe(functions.Split("foo_bar", "_"), functions.Split("eggs&ham", "&"))
 
-print("NotIncluded was excluded from the bindings: " .. tostring(functions.not_included == nil))
+print("NotIncluded was excluded from the bindings: " .. tostring(functions.NotIncluded == nil))
 
 --[[ You can seamlessly pass Lua and Go functions as parameters. ]]
-functions.do_func(lua_left_pad)
-functions.do_func(functions.go_left_pad)
+functions.DoFunc(lua_left_pad)
+functions.DoFunc(functions.GoLeftPad)
 
 --[[ You can also assign methods to struct fields. ]]
-container = fn_container.new(lua_left_pad)
+container = FnContainer.NewFnContainer(lua_left_pad)
 `
 
 func Example() {
 	L := lua.NewState()
 	defer L.Close()
 
-	// For pure functions, we use the PreloadModule function instead of gobindlua.Register.
-	L.PreloadModule("functions", FunctionsModuleLoader)
+	// For pure functions, we use the LuaPreloadModule function instead of gobindlua.Register.
+	LuaPreloadModule(L)
 
 	gobindlua.Register(L, &FnContainer{})
 

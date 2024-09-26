@@ -4,12 +4,12 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const ARRAY_MODULES_NAME = "gbl_array"
-const ARRAY_METATABLE_NAME = "gbl_array_fields"
+const ARRAY_MODULES_NAME = "GblSlice"
+const ARRAY_METATABLE_NAME = "GblSliceTable"
 
 func LuaArrayModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "to_table", L.NewFunction(arrayToTable))
+	L.SetField(staticMethodsTable, "ToTable", L.NewFunction(arrayToTable))
 
 	L.Push(staticMethodsTable)
 
@@ -24,22 +24,22 @@ func LuaArrayRegisterGlobalMetatable(L *lua.LState) {
 	L.SetField(fieldsTable, "__len", L.NewFunction(arrayLen))
 }
 
-type LuaArray struct {
+type GblSlice struct {
 	Slice    interface{}
 	Len      func() int
 	Index    func(idx int) lua.LValue
 	SetIndex func(idx int, val lua.LValue)
 }
 
-func (*LuaArray) LuaMetatableType() string {
+func (*GblSlice) LuaMetatableType() string {
 	return ARRAY_METATABLE_NAME
 }
 
-func checkArray(param int, L *lua.LState) *LuaArray {
-	slice, ok := L.CheckUserData(param).Value.(*LuaArray)
+func checkArray(param int, L *lua.LState) *GblSlice {
+	slice, ok := L.CheckUserData(param).Value.(*GblSlice)
 
 	if !ok {
-		L.ArgError(1, "LuaArray type expected")
+		L.ArgError(1, "GblSlice type expected")
 	}
 
 	return slice
@@ -95,7 +95,7 @@ func MapLuaArrayOrTableToGoSlice[T any](p lua.LValue, level int, mapper func(val
 
 	switch t := p.(type) {
 	case *lua.LUserData:
-		ar, ok := t.Value.(*LuaArray)
+		ar, ok := t.Value.(*GblSlice)
 
 		if !ok {
 			return nil, badArrayOrTableCast(ret, t, level)

@@ -9,12 +9,12 @@ import (
 )
 
 func (goType *Lion) LuaModuleName() string {
-	return "lion"
+	return "Lion"
 }
 
 func (goType *Lion) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorLionNewLion))
+	L.SetField(staticMethodsTable, "NewLion", L.NewFunction(luaConstructorLionNewLion))
 
 	L.Push(staticMethodsTable)
 
@@ -38,7 +38,7 @@ func luaConstructorLionNewLion(L *lua.LState) int {
 }
 
 func (r *Lion) LuaMetatableType() string {
-	return "lion_fields"
+	return "LionTable"
 }
 
 func luaCheckLion(param int, L *lua.LState) *Lion {
@@ -54,7 +54,7 @@ func luaAccessLion(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "sound":
+	case "Sound":
 		L.Push(L.NewFunction(luaMethodLionSound))
 
 	default:

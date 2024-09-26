@@ -54,7 +54,7 @@ func GetLuaNameFromTag(field *types.Var, tag string) string {
 
 func fieldName(field *types.Var) string {
 	if field.Exported() {
-		return gobindluautil.SnakeCase(field.Name())
+		return gobindluautil.LookupCustomName(field.Name())
 	}
 
 	return ""

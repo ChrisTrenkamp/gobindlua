@@ -10,12 +10,12 @@ import (
 )
 
 func (goType *PrimitiveStruct) LuaModuleName() string {
-	return "primitive_struct"
+	return "PrimitiveStruct"
 }
 
 func (goType *PrimitiveStruct) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorPrimitiveStructNewPrimitiveStruct))
+	L.SetField(staticMethodsTable, "NewPrimitiveStruct", L.NewFunction(luaConstructorPrimitiveStructNewPrimitiveStruct))
 
 	L.Push(staticMethodsTable)
 
@@ -39,7 +39,7 @@ func luaConstructorPrimitiveStructNewPrimitiveStruct(L *lua.LState) int {
 }
 
 func (r *PrimitiveStruct) LuaMetatableType() string {
-	return "primitive_struct_fields"
+	return "PrimitiveStructTable"
 }
 
 func luaCheckPrimitiveStruct(param int, L *lua.LState) *PrimitiveStruct {
@@ -56,28 +56,28 @@ func luaAccessPrimitiveStruct(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "my_bool":
+	case "MyBool":
 		L.Push((lua.LBool)(recv.MyBool))
 
-	case "my_int":
+	case "MyInt":
 		L.Push((lua.LNumber)(recv.MyInt))
 
-	case "my_int64":
+	case "MyInt64":
 		L.Push((lua.LNumber)(recv.MyInt64))
 
-	case "my_float":
+	case "MyFloat":
 		L.Push((lua.LNumber)(recv.MyFloat))
 
-	case "my_string":
+	case "MyString":
 		L.Push((lua.LString)(recv.SomeString))
 
-	case "my_specialized_int":
+	case "MySpecializedInt":
 		L.Push((lua.LNumber)(recv.MySpecializedInt))
 
-	case "divide_my_int":
+	case "DivideMyInt":
 		L.Push(L.NewFunction(luaMethodPrimitiveStructDivideMyInt))
 
-	case "set_specialized_int":
+	case "SetSpecializedInt":
 		L.Push(L.NewFunction(luaMethodPrimitiveStructSetSpecializedInt))
 
 	default:
@@ -92,27 +92,27 @@ func luaSetPrimitiveStruct(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "my_bool":
+	case "MyBool":
 		ud := bool(L.CheckBool(3))
 		recv.MyBool = ud
 
-	case "my_int":
+	case "MyInt":
 		ud := int32(L.CheckNumber(3))
 		recv.MyInt = ud
 
-	case "my_int64":
+	case "MyInt64":
 		ud := int64(L.CheckNumber(3))
 		recv.MyInt64 = ud
 
-	case "my_float":
+	case "MyFloat":
 		ud := primitivesubpackage.SomeFloat64(L.CheckNumber(3))
 		recv.MyFloat = ud
 
-	case "my_string":
+	case "MyString":
 		ud := string(L.CheckString(3))
 		recv.SomeString = ud
 
-	case "my_specialized_int":
+	case "MySpecializedInt":
 		ud := SpecializedInt(L.CheckNumber(3))
 		recv.MySpecializedInt = ud
 

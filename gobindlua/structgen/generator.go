@@ -94,7 +94,7 @@ func (g *StructGenerator) StructToGenerate() string {
 }
 
 func (g *StructGenerator) StructMetatableIdentifier() string {
-	return gobindluautil.SnakeCase(g.StructToGenerate())
+	return gobindluautil.LookupCustomName(g.StructToGenerate())
 }
 
 func (g *StructGenerator) StructMetatableFieldsIdentifier() string {
@@ -120,7 +120,6 @@ func (g *StructGenerator) gatherFunctionsToGenerate() []datatype.FunctionType {
 func (g *StructGenerator) gatherConstructors() []datatype.FunctionType {
 	ret := make([]datatype.FunctionType, 0)
 	underylingStructType := g.structObject.Type().Underlying()
-	constructorPrefix := "New" + g.structToGenerate
 
 	for _, syn := range g.packageSource.Syntax {
 		if gobindluautil.IsGobindLuaFile(syn) {
@@ -139,13 +138,7 @@ func (g *StructGenerator) gatherConstructors() []datatype.FunctionType {
 							continue
 						}
 
-						luaName := gobindluautil.SnakeCase(fnName)
-
-						if strings.HasPrefix(fnName, constructorPrefix) {
-							luaName = "New" + strings.TrimPrefix(fnName, constructorPrefix)
-							luaName = gobindluautil.SnakeCase(luaName)
-						}
-
+						luaName := gobindluautil.LookupCustomName(fnName)
 						sourceCodeName := "luaConstructor" + g.StructToGenerate() + fnName
 						ret = append(ret, datatype.CreateFunctionFromExpr(fn, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
 						break
@@ -179,7 +172,7 @@ func (g *StructGenerator) gatherReceivers() []datatype.FunctionType {
 					recType := datatype.CreateDataTypeFromExpr(recType.Type, g.packageSource, g.allDeclaredInterfaces)
 
 					if recType.Type.Underlying() == underylingStructType {
-						luaName := gobindluautil.SnakeCase(fnName)
+						luaName := gobindluautil.LookupCustomName(fnName)
 						sourceCodeName := "luaMethod" + g.StructToGenerate() + fnName
 						ret = append(ret, datatype.CreateFunctionFromExpr(fn, luaName, sourceCodeName, g.packageSource, g.allDeclaredInterfaces))
 						break
@@ -384,7 +377,7 @@ func (g *StructGenerator) GenerateInterfaceDeclarations() string {
 
 	for _, i := range g.allDeclaredInterfaces {
 		if g.implementsInterface(i.Interface) {
-			ret = append(ret, gobindluautil.StructOrInterfaceMetadataName(i.Name))
+			ret = append(ret, gobindluautil.LookupCustomName(i.Name))
 		}
 	}
 

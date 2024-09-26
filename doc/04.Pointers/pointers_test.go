@@ -9,19 +9,19 @@ import (
 )
 
 const script = `
-local sub = require "sub"
+local Sub = require "Sub"
 
 --[[ gobindlua will even work with pointers. ]]
-s.a = {
+s.A = {
 	["a"]={
 		["b"]={
 			"c"
 		}
 	}
 }
-s.b = sub.new("d")
-s.c = sub.new("e")
-s.d = {
+s.B = Sub.NewSub("d")
+s.C = Sub.NewSub("e")
+s.D = {
 	{
 		1,2
 	},
@@ -29,20 +29,20 @@ s.d = {
 		3,4
 	}
 }
-s.e = {
+s.E = {
 	{
-		sub.new("f"),sub.new("g")
+		Sub.NewSub("f"),Sub.NewSub("g")
 	},
 	{
-		sub.new("h"),sub.new("i")
+		Sub.NewSub("h"),Sub.NewSub("i")
 	}
 }
-s.f = {
+s.F = {
 	{
-		[sub.new("j")]=5
+		[Sub.NewSub("j")]=5
 	},
 	{
-		[sub.new("k")]=6
+		[Sub.NewSub("k")]=6
 	}
 }
 `

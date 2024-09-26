@@ -89,7 +89,7 @@ func (g *InterfaceGenerator) gatherInterfaceMethods() []datatype.FunctionType {
 
 func (g *InterfaceGenerator) createFuncDecl(fn *types.Func) datatype.FunctionType {
 	name := fn.Name()
-	luaName := gobindluautil.SnakeCase(name)
+	luaName := gobindluautil.LookupCustomName(name)
 	var params []datatype.Param
 	var ret []datatype.DataType
 	typ := fn.Type().(*types.Signature)
@@ -97,7 +97,7 @@ func (g *InterfaceGenerator) createFuncDecl(fn *types.Func) datatype.FunctionTyp
 	for i := 0; i < typ.Params().Len(); i++ {
 		p := typ.Params().At(i)
 		typ := datatype.CreateDataTypeFrom(p.Type(), g.packageSource, g.allDeclaredInterfaces)
-		luaName := gobindluautil.SnakeCase(p.Name())
+		luaName := gobindluautil.LookupCustomName(p.Name())
 
 		if luaName == "" {
 			luaName = "_" + strconv.Itoa(i)
@@ -129,7 +129,7 @@ func (g *InterfaceGenerator) createFuncDecl(fn *types.Func) datatype.FunctionTyp
 }
 
 func (g *InterfaceGenerator) InterfaceToGenerate() string {
-	return gobindluautil.SnakeCase(g.interfaceToGenerate)
+	return gobindluautil.LookupCustomName(g.interfaceToGenerate)
 }
 
 func (g *InterfaceGenerator) generateLuaPackageDefinition(w io.Writer) {

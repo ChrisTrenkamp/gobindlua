@@ -9,12 +9,12 @@ import (
 )
 
 func (goType *Human) LuaModuleName() string {
-	return "human"
+	return "Human"
 }
 
 func (goType *Human) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorHumanNewHuman))
+	L.SetField(staticMethodsTable, "NewHuman", L.NewFunction(luaConstructorHumanNewHuman))
 
 	L.Push(staticMethodsTable)
 
@@ -38,7 +38,7 @@ func luaConstructorHumanNewHuman(L *lua.LState) int {
 }
 
 func (r *Human) LuaMetatableType() string {
-	return "human_fields"
+	return "HumanTable"
 }
 
 func luaCheckHuman(param int, L *lua.LState) *Human {
@@ -54,7 +54,7 @@ func luaAccessHuman(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "sound":
+	case "Sound":
 		L.Push(L.NewFunction(luaMethodHumanSound))
 
 	default:

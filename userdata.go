@@ -37,9 +37,9 @@ func UnwrapLValueToAny(l lua.LValue) any {
 	switch t := l.(type) {
 	case *lua.LUserData:
 		switch s := t.Value.(type) {
-		case *LuaArray:
+		case *GblSlice:
 			return s.Slice
-		case *LuaMap:
+		case *GblMap:
 			return s.Map
 		default:
 			return s

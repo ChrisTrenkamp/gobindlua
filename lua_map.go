@@ -4,12 +4,12 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-const MAP_MODULES_NAME = "gbl_map"
-const MAP_METATABLE_NAME = "gbl_map_fields"
+const MAP_MODULES_NAME = "GblMap"
+const MAP_METATABLE_NAME = "GblMapTable"
 
 func LuaMapModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "to_table", L.NewFunction(mapToTable))
+	L.SetField(staticMethodsTable, "ToTable", L.NewFunction(mapToTable))
 
 	L.Push(staticMethodsTable)
 
@@ -24,7 +24,7 @@ func LuaMapRegisterGlobalMetatable(L *lua.LState) {
 	L.SetField(fieldsTable, "__len", L.NewFunction(mapLen))
 }
 
-type LuaMap struct {
+type GblMap struct {
 	Map      interface{}
 	Len      func() int
 	GetValue func(idx lua.LValue) lua.LValue
@@ -32,15 +32,15 @@ type LuaMap struct {
 	ForEach  func(f func(k, v lua.LValue))
 }
 
-func (*LuaMap) LuaMetatableType() string {
+func (*GblMap) LuaMetatableType() string {
 	return MAP_METATABLE_NAME
 }
 
-func checkMap(param int, L *lua.LState) *LuaMap {
-	m, ok := L.CheckUserData(param).Value.(*LuaMap)
+func checkMap(param int, L *lua.LState) *GblMap {
+	m, ok := L.CheckUserData(param).Value.(*GblMap)
 
 	if !ok {
-		L.ArgError(1, "LuaMap type expected")
+		L.ArgError(1, "GblMap type expected")
 	}
 
 	return m
@@ -80,7 +80,7 @@ func MapLuaArrayOrTableToGoMap[K comparable, V any](p lua.LValue, level int, map
 
 	switch t := p.(type) {
 	case *lua.LUserData:
-		ar, ok := t.Value.(*LuaMap)
+		ar, ok := t.Value.(*GblMap)
 
 		if !ok {
 			return nil, badArrayOrTableCast(ret, t, level)

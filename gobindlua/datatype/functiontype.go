@@ -41,7 +41,7 @@ func CreateFunction(typ *types.Signature, actualFnName, luaFnName, goBindFnName 
 	for i := 0; i < typ.Params().Len(); i++ {
 		param := typ.Params().At(i)
 		paramType := CreateDataTypeFrom(param.Type(), packageSource, allDeclaredInterfaces)
-		luaName := gobindluautil.SnakeCase(param.Name())
+		luaName := gobindluautil.LookupCustomName(param.Name())
 		isEllipses := i == typ.Params().Len()-1 && typ.Variadic()
 		params = append(params, Param{
 			IsEllipses: isEllipses,

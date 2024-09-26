@@ -10,12 +10,12 @@ import (
 )
 
 func (goType *ArrayStruct) LuaModuleName() string {
-	return "array_struct"
+	return "ArrayStruct"
 }
 
 func (goType *ArrayStruct) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorArrayStructNewArrayStruct))
+	L.SetField(staticMethodsTable, "NewArrayStruct", L.NewFunction(luaConstructorArrayStructNewArrayStruct))
 
 	L.Push(staticMethodsTable)
 
@@ -65,7 +65,7 @@ func luaConstructorArrayStructNewArrayStruct(L *lua.LState) int {
 }
 
 func (r *ArrayStruct) LuaMetatableType() string {
-	return "array_struct_fields"
+	return "ArrayStructTable"
 }
 
 func luaCheckArrayStruct(param int, L *lua.LState) *ArrayStruct {
@@ -82,8 +82,8 @@ func luaAccessArrayStruct(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "elements":
-		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
+	case "Elements":
+		L.Push(gobindlua.NewUserData(&gobindlua.GblSlice{
 			Slice: recv.Elements,
 			Len:   func() int { return len(recv.Elements) },
 			Index: func(idx0 int) lua.LValue { return (lua.LNumber)((recv.Elements)[idx0]) },
@@ -101,13 +101,13 @@ func luaAccessArrayStruct(L *lua.LState) int {
 			},
 		}, L))
 
-	case "set_elements":
+	case "SetElements":
 		L.Push(L.NewFunction(luaMethodArrayStructSetElements))
 
-	case "set_elements_from_subpackage":
+	case "SetElementsFromSubpackage":
 		L.Push(L.NewFunction(luaMethodArrayStructSetElementsFromSubpackage))
 
-	case "string":
+	case "String":
 		L.Push(L.NewFunction(luaMethodArrayStructString))
 
 	default:
@@ -122,7 +122,7 @@ func luaSetArrayStruct(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "elements":
+	case "Elements":
 
 		udsl, err := gobindlua.MapLuaArrayOrTableToGoSlice[float32](L.CheckAny(3), 0, func(val0 lua.LValue) float32 {
 

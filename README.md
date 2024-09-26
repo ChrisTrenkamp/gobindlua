@@ -93,4 +93,5 @@ go generate ./... && go test ./...
 
 TODO:
 
+* Provide a way to rename structs/packages for the generated Lua bindings.
 * `godoc` comments for structs, fields, and methods should be attached to the lua definitions.

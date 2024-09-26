@@ -3,19 +3,19 @@
 
 local functions = {}
 ---@param ... any
-function functions.print_me(...) end
+function functions.PrintMe(...) end
 
 ---@param s string
 ---@param spl string
 ---@return string[]
-function functions.split(s, spl) end
+function functions.Split(s, spl) end
 
 ---@param str string
 ---@param pad number
 ---@return string
-function functions.go_left_pad(str, pad) end
+function functions.GoLeftPad(str, pad) end
 
 ---@param fn function
-function functions.do_func(fn) end
+function functions.DoFunc(fn) end
 
 return functions

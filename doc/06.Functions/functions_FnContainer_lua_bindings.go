@@ -9,12 +9,12 @@ import (
 )
 
 func (goType *FnContainer) LuaModuleName() string {
-	return "fn_container"
+	return "FnContainer"
 }
 
 func (goType *FnContainer) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorFnContainerNewFnContainer))
+	L.SetField(staticMethodsTable, "NewFnContainer", L.NewFunction(luaConstructorFnContainerNewFnContainer))
 
 	L.Push(staticMethodsTable)
 
@@ -73,7 +73,7 @@ func luaConstructorFnContainerNewFnContainer(L *lua.LState) int {
 }
 
 func (r *FnContainer) LuaMetatableType() string {
-	return "fn_container_fields"
+	return "FnContainerTable"
 }
 
 func luaCheckFnContainer(param int, L *lua.LState) *FnContainer {
@@ -90,7 +90,7 @@ func luaAccessFnContainer(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "fn":
+	case "Fn":
 		L.Push(L.NewFunction(func(L *lua.LState) int {
 
 			var p0 *string
@@ -126,7 +126,7 @@ func luaSetFnContainer(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "fn":
+	case "Fn":
 
 		ud_lf, ok := L.CheckAny(3).(*lua.LFunction)
 

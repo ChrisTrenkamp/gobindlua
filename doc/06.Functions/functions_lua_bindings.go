@@ -6,12 +6,16 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
-func FunctionsModuleLoader(L *lua.LState) int {
+func LuaPreloadModule(L *lua.LState) {
+	L.PreloadModule("functions", luaPackageModuleLoader)
+}
+
+func luaPackageModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "print_me", L.NewFunction(luaFunctionPrintMe))
-	L.SetField(staticMethodsTable, "split", L.NewFunction(luaFunctionSplit))
-	L.SetField(staticMethodsTable, "go_left_pad", L.NewFunction(luaFunctionGoLeftPad))
-	L.SetField(staticMethodsTable, "do_func", L.NewFunction(luaFunctionDoFunc))
+	L.SetField(staticMethodsTable, "PrintMe", L.NewFunction(luaFunctionPrintMe))
+	L.SetField(staticMethodsTable, "Split", L.NewFunction(luaFunctionSplit))
+	L.SetField(staticMethodsTable, "GoLeftPad", L.NewFunction(luaFunctionGoLeftPad))
+	L.SetField(staticMethodsTable, "DoFunc", L.NewFunction(luaFunctionDoFunc))
 
 	L.Push(staticMethodsTable)
 
@@ -61,7 +65,7 @@ func luaFunctionSplit(L *lua.LState) int {
 
 	r0 := Split(p0, p1)
 
-	L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
+	L.Push(gobindlua.NewUserData(&gobindlua.GblSlice{
 		Slice: r0,
 		Len:   func() int { return len(r0) },
 		Index: func(idx0 int) lua.LValue { return (lua.LString)((r0)[idx0]) },

@@ -9,12 +9,12 @@ import (
 )
 
 func (goType *User) LuaModuleName() string {
-	return "user"
+	return "User"
 }
 
 func (goType *User) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new", L.NewFunction(luaConstructorUserNewUser))
+	L.SetField(staticMethodsTable, "NewUser", L.NewFunction(luaConstructorUserNewUser))
 
 	L.Push(staticMethodsTable)
 
@@ -59,7 +59,7 @@ func luaConstructorUserNewUser(L *lua.LState) int {
 }
 
 func (r *User) LuaMetatableType() string {
-	return "user_fields"
+	return "UserTable"
 }
 
 func luaCheckUser(param int, L *lua.LState) *User {
@@ -76,13 +76,13 @@ func luaAccessUser(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "name":
+	case "Name":
 		L.Push((lua.LString)(recv.Name))
 
-	case "age":
+	case "Age":
 		L.Push((lua.LNumber)(recv.Age))
 
-	case "email":
+	case "Email":
 		L.Push((lua.LString)(recv.Email))
 
 	default:
@@ -97,15 +97,15 @@ func luaSetUser(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "name":
+	case "Name":
 		ud := string(L.CheckString(3))
 		recv.Name = ud
 
-	case "age":
+	case "Age":
 		ud := int(L.CheckNumber(3))
 		recv.Age = ud
 
-	case "email":
+	case "Email":
 		ud := string(L.CheckString(3))
 		recv.Email = ud
 

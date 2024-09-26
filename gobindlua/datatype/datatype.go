@@ -114,7 +114,7 @@ func convertGoTypeToLuaSlice(typ types.Type, variableType *DataType, variable st
 		IndexReturn:         indexReturn,
 	}
 
-	templ := `gobindlua.NewUserData(&gobindlua.LuaArray{
+	templ := `gobindlua.NewUserData(&gobindlua.GblSlice{
 	Slice: {{ .Variable }},
 	Len:   func() int { return len({{ .VariableDereference }}{{ .Variable }}) },
 	Index: func(idx{{ .TableLevel }} int) lua.LValue { return {{ .IndexReturn }} },
@@ -179,7 +179,7 @@ func convertGoTypeToLuaMap(keyType, valType types.Type, variableType *DataType, 
 		IndexReturn:           indexReturn,
 	}
 
-	templ := `gobindlua.NewUserData(&gobindlua.LuaMap{
+	templ := `gobindlua.NewUserData(&gobindlua.GblMap{
 Map: {{ .Variable }},
 Len:   func() int { return len({{ .VariableDereference }}{{ .Variable }}) },
 GetValue: func(key{{ .TableLevel }} lua.LValue) lua.LValue {
@@ -800,9 +800,9 @@ func (d *DataType) luaType() string {
 			return "lua.LNumber"
 		}
 	case *types.Slice, *types.Array:
-		return "*gobindlua.LuaArray"
+		return "*gobindlua.GblSlice"
 	case *types.Map:
-		return "*gobindlua.LuaMap"
+		return "*gobindlua.GblMap"
 	case *types.Struct, *types.Interface:
 		return "lua.LUserData"
 	case *types.Signature:
@@ -880,7 +880,7 @@ func (d *DataType) LuaType(isFunctionReturn bool) string {
 	case *types.Interface:
 		for _, i := range d.allDeclaredInterfaces {
 			if types.Identical(t, i.Interface) {
-				return gobindluautil.StructOrInterfaceMetadataName(d.declaredGoTypeWithoutPackage())
+				return gobindluautil.LookupCustomName(d.declaredGoTypeWithoutPackage())
 			}
 		}
 

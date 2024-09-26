@@ -9,12 +9,12 @@ import (
 )
 
 func (goType *Matrix) LuaModuleName() string {
-	return "matrix"
+	return "Matrix"
 }
 
 func (goType *Matrix) LuaModuleLoader(L *lua.LState) int {
 	staticMethodsTable := L.NewTable()
-	L.SetField(staticMethodsTable, "new_from", L.NewFunction(luaConstructorMatrixNewMatrixFrom))
+	L.SetField(staticMethodsTable, "NewMatrixFrom", L.NewFunction(luaConstructorMatrixNewMatrixFrom))
 
 	L.Push(staticMethodsTable)
 
@@ -71,7 +71,7 @@ func luaConstructorMatrixNewMatrixFrom(L *lua.LState) int {
 }
 
 func (r *Matrix) LuaMetatableType() string {
-	return "matrix_fields"
+	return "MatrixTable"
 }
 
 func luaCheckMatrix(param int, L *lua.LState) *Matrix {
@@ -88,12 +88,12 @@ func luaAccessMatrix(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "elements":
-		L.Push(gobindlua.NewUserData(&gobindlua.LuaArray{
+	case "Elements":
+		L.Push(gobindlua.NewUserData(&gobindlua.GblSlice{
 			Slice: recv.Elements,
 			Len:   func() int { return len(recv.Elements) },
 			Index: func(idx0 int) lua.LValue {
-				return gobindlua.NewUserData(&gobindlua.LuaArray{
+				return gobindlua.NewUserData(&gobindlua.GblSlice{
 					Slice: (recv.Elements)[idx0],
 					Len:   func() int { return len((recv.Elements)[idx0]) },
 					Index: func(idx1 int) lua.LValue { return (lua.LNumber)(((recv.Elements)[idx0])[idx1]) },
@@ -134,7 +134,7 @@ func luaAccessMatrix(L *lua.LState) int {
 			},
 		}, L))
 
-	case "string":
+	case "String":
 		L.Push(L.NewFunction(luaMethodMatrixString))
 
 	default:
@@ -149,7 +149,7 @@ func luaSetMatrix(L *lua.LState) int {
 	p2 := L.CheckString(2)
 
 	switch p2 {
-	case "elements":
+	case "Elements":
 
 		ud, err := gobindlua.MapLuaArrayOrTableToGoSlice[[]float64](L.CheckAny(3), 0, func(val0 lua.LValue) []float64 {
 

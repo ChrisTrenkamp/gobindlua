@@ -10,31 +10,31 @@ import (
 )
 
 const script = `
-local primitive_struct = require "primitive_struct"
+local PrimitiveStruct = require "PrimitiveStruct"
 
 --[[ You can call the constructor functions and methods and access the fields from Lua. ]]
-data = primitive_struct.new()
-data.my_bool = true
-data.my_int = 42
-data.my_int64 = 0xDEADBEEF
-data.my_float = 3.14
-data.my_string = "all your lua are belong to us"
+data = PrimitiveStruct.NewPrimitiveStruct()
+data.MyBool = true
+data.MyInt = 42
+data.MyInt64 = 0xDEADBEEF
+data.MyFloat = 3.14
+data.MyString = "all your lua are belong to us"
 
-print("MyBool: " .. tostring(data.my_bool))
-print("MyInt: " .. tostring(data.my_int))
-print("MyInt64: " .. tostring(data.my_int64))
-print("MyFloat: " .. tostring(data.my_float))
-print("MyString: " .. tostring(data.my_string))
-print("WillBeExcluded has been excluded: " .. tostring(data.will_be_excluded == nil))
+print("MyBool: " .. tostring(data.MyBool))
+print("MyInt: " .. tostring(data.MyInt))
+print("MyInt64: " .. tostring(data.MyInt64))
+print("MyFloat: " .. tostring(data.MyFloat))
+print("MyString: " .. tostring(data.MyString))
+print("WillBeExcluded has been excluded: " .. tostring(data.WillBeExcluded == nil))
 
-data:set_specialized_int(9001)
-print("MySpecializedInt: " .. tostring(data.my_specialized_int))
+data:SetSpecializedInt(9001)
+print("MySpecializedInt: " .. tostring(data.MySpecializedInt))
 
-print("DivideMyInt: " .. tostring(data:divide_my_int(2)))
-local _, err = pcall(function () data:divide_my_int(0) end)
+print("DivideMyInt: " .. tostring(data:DivideMyInt(2)))
+local _, err = pcall(function () data:DivideMyInt(0) end)
 print("DivideMyInt error: " .. err)
 
-print("ExcludedMethod has been excluded: " .. tostring(data.excluded_method == nil))
+print("ExcludedMethod has been excluded: " .. tostring(data.ExcludedMethod == nil))
 `
 
 func Example() {
