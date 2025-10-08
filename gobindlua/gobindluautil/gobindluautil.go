@@ -26,8 +26,12 @@ func StructFieldMetadataName(name string) string {
 
 func LoadSourcePackage(workingDir string, dependantModules []string) (*packages.Package, []declaredinterface.DeclaredInterface, error) {
 	config := &packages.Config{
-		Mode: packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo | packages.NeedSyntax | packages.NeedFiles | packages.NeedModule,
-		Dir:  workingDir,
+		Mode: packages.NeedSyntax |
+			packages.NeedTypes | packages.NeedTypesInfo |
+			packages.NeedFiles | packages.NeedCompiledGoFiles |
+			packages.NeedImports | packages.NeedDeps |
+			packages.NeedName,
+		Dir: workingDir,
 	}
 	var pack []*packages.Package
 	var err error
